@@ -1,1 +1,1 @@
- 
+print("Test your typing speed!")
