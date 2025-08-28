@@ -37,7 +37,7 @@ def get_connection():
         except Exception as e:
             print("Error: " + e)
         
-        if conn.is_connected(): print("a new connection as been established!")
+        if conn.is_connected(): print("a new connection has been established!")
 
     else: print("connection already exists")
 

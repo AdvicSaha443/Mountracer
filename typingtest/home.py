@@ -9,5 +9,9 @@ def initialize():
         print("You must enter 0 or 1")
         return
     
-    if not choice: login()
-    else: create_new_user()
+    if not choice: 
+        if not login(): initialize()
+    else:
+        if not create_new_user(): initialize()
+
+    
