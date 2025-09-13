@@ -1,5 +1,5 @@
-from typingtest import home
+from typingtest import state
 # import pyfiglet
 
 print("Welcome to Mountracer!")
-home.initialize()
+state.initialize()

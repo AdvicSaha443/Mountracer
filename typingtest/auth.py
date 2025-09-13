@@ -20,7 +20,7 @@ def login():
                 print("Wrong password entered!\nDirecting back to login page\n")
                 break
             else:
-                session.set_current_user(User(username=username, password=password))
+                session.set_current_user(User(userid = user[0], username=username, password=password))
                 return 1
     else: print("User does not exist!\nDirecting back to login page\n")
     
@@ -52,5 +52,5 @@ def create_new_user():
     cursor.close()
     conn.commit()
 
-    print("\nYou have signed up!\nLog in to user your account")
+    print("\nYou have signed up!\nLog in to use your account")
     return 0

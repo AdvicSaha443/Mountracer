@@ -1,7 +1,12 @@
 class Session:
     def __init__(self):
         self.user = None
-        self.universe = None
+        self.state = "HOME"   # stores the current state, for example, home/idle, test, settings, etc.
+        self.universe = "play"
+
+    def set_current_state(self, state: str):
+        if state not in ["HOME", "TEST", "SETTING"]: return 0
+        self.state = state
 
     def get_current_user(self):
         return self.user
@@ -20,4 +25,3 @@ class Session:
 
 # Will be accessing this session variable everywhere
 session = Session()
-    

@@ -1,7 +1,8 @@
 from .database import get_connection
 
 class User:
-    def __init__(self, username: str, password: str):
+    def __init__(self, userid: int, username: str, password: str):
+        self.user_id = userid
         self.username = username
         self.password = password
         self.new_user = None
@@ -15,4 +16,5 @@ class User:
         # cursor.execute("CREATE TABLE IF NOT EXISTS races ()")
 
         print("Will fetch the user data here")
+        return None
 

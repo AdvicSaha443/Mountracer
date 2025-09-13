@@ -1,6 +1,7 @@
+""" GENERAL COMMANDS """
 
 """WPM COMMANDS"""
-def calculate_wpm(characters: int, time):
+def calculate_wpm(characters: int, time: int):
     pass
 
 """ ACCURACY COMMANDS """
