@@ -1,11 +1,31 @@
 """ GENERAL COMMANDS """
+def calculate_stat(timestamp: float, timetaken: int, text: list, user_text_input: str, universe):
+    # information required: timetaken, text, user_text_input, start_time
+
+    accuracy_info = levenshtein_accuracy(text[1], user_text_input)
+    wpm = calculate_wpm(len(user_text_input), timetaken, accuracy_info[0])
+    raw_wpm = calculate_raw_wpm(len(user_text_input), timetaken)
+
+    return {
+        "text": text,
+        "universe": universe,
+        "accuracy": round(accuracy_info[0], 4),
+        "wpm": round(wpm, 4),
+        "raw_wpm": raw_wpm,
+        "edit_distance": accuracy_info[1],
+        "timestamp": timestamp
+    }
+
 
 """WPM COMMANDS"""
-def calculate_wpm(characters: int, time: int):
-    pass
+
+def calculate_wpm(characters: int, time: int, accuracy: float):
+    return ((accuracy/1.0)*(((characters/5.0)/time)*60.0)) #accuracy*raw_wpm
+
+def calculate_raw_wpm(characters: int, time: int):
+    return (((characters/5.0)/time)*60.0) #using average length of a word in English Language
 
 """ ACCURACY COMMANDS """
-
 
 #accuracy checked character to character
 def levenshtein_accuracy(a: str, b: str):
@@ -26,7 +46,7 @@ def levenshtein_accuracy(a: str, b: str):
     accuracy = 1.0 - edit_distance/len(a)
 
     print("Edit Distance: " + str(edit_distance))
-    return accuracy
+    return (accuracy, edit_distance)
 
 #even if a single mistake exists in a word, the whole word is considered wrong
 #will be coding this later

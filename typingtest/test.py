@@ -1,47 +1,62 @@
+from .database import get_connection
+from .wpm import calculate_stat
 from .user import User
 import random
 import time
 import csv
 
-def start_test(universe: str, user: User):
+def start_test(universe: str, user: User, practice: bool = False):
     # test is being start in flow state, hence using while loop
     choice = ""
 
     while True:
         if choice == "exit": break
 
-        text = select_text(universe)
+        text: list = select_text(universe, user.dictionary_word_limit)
         print("Your time starts now! You may start typing, and once you're done press Enter!\n\n")
-        print(text[0], end = "\n\n")
+        print(text[1], end = "\n\n")
 
         #taking user input
         start_time = time.perf_counter()
         user_text_input = str(input())
+
         end_time = time.perf_counter()
+        print(end_time - start_time)
+        stat = calculate_stat(time.mktime(time.localtime()), (end_time - start_time), text, user_text_input, universe)
 
-        choice = input("Do you want to exist?: (exit): ")
+        # Display information related to current test
+        print("\nYou've Completed the Test!")
+        print("Here is the Statistics from the test: \n")
 
-        #calling methods to calculate data about the race
+        if universe != "dictionary": print(f"You just typed a quote from: {text[2]}\nAuthor: {text[3]}\n")
+        print(f"wpm: {stat.get('wpm')}\nacc: {stat.get('accuracy')*100.0}%\nraw wpm: {stat.get('raw_wpm')}\ntotal characters/wrong operations: {len(text[1])}/{stat.get('edit_distance')}\n")
 
+        if practice:
+            choice1 = input("Do you want to save this result? (y/n): ")
+            if choice1.lower() == "y": save_test_result(stat, user)
+        else: save_test_result(stat, user)
 
-    # print("THIS IS SAMPLE TEXT!")
-    # print("Your time starts now! You may start typing, and once you're done press Enter!\n\n")
+        choice = input("Do you want to exit?: (exit): ")
 
-    # start_ = time.perf_counter()
-    # user_text_input = str(input(""))
-    # end_ = time.perf_counter()
-
-    # print(end_)
-    # time_difference = round(end_ - start_, 3)
-    # print(time_difference)
-
-def select_text(universe: str):
-
+def select_text(universe: str, max_range: int):
     with open(f"./csv_files/text_{universe}.csv", "r") as f:
         csv_reader = csv.reader(f)
 
-        if universe != "dictonary":
+        if universe != "dictionary":
             texts = list(csv_reader)
             return texts[random.randint(0, len(texts)-1)]
         else:
-            pass
+            words = list(csv_reader)[0]
+            text = ["dict", ("".join((words[random.randint(0, len(words)-1)] + " ") for _ in range(0, max_range)))[:-1], "None", "None"]
+
+            return text
+
+def save_test_result(stat: dict, user: User):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("CREATE TABLE IF NOT EXISTS races (race_number INT AUTO_INCREMENT PRIMARY KEY, user_id INT, username VARCHAR(64), universe VARCHAR(64), text_id VARCHAR(64), wpm FLOAT(7,4), accuracy FLOAT(5, 4), epoch VARCHAR(64));")
+    cursor.execute(f"INSERT INTO races (user_id, username, universe, text_id, wpm, accuracy, epoch) VALUES({user.user_id}, '{user.username}', '{stat.get('universe')}', '{stat.get('text')[0]}', {stat.get('wpm')}, {stat.get('accuracy')}, '{stat.get('timestamp')}');")
+
+    cursor.close()
+    conn.commit()
