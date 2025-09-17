@@ -1,8 +1,8 @@
 """ This files handles the authentication commands"""
 
-from .database import get_connection
-from .session import session
-from .user import User
+from typingtest.database import get_connection
+from typingtest.session import session
+from typingtest.user import User
 
 def login():
     username = str(input("\nEnter your username: "))

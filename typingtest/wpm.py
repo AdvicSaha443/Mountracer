@@ -11,11 +11,10 @@ def calculate_stat(timestamp: float, timetaken: int, text: list, user_text_input
         "universe": universe,
         "accuracy": round(accuracy_info[0], 4),
         "wpm": round(wpm, 4),
-        "raw_wpm": raw_wpm,
+        "raw_wpm": round(raw_wpm, 4),
         "edit_distance": accuracy_info[1],
         "timestamp": timestamp
     }
-
 
 """WPM COMMANDS"""
 
@@ -31,8 +30,8 @@ def calculate_raw_wpm(characters: int, time: int):
 def levenshtein_accuracy(a: str, b: str):
     # b (user typed text) -> a (original text)
 
-    if len(a) == 0 or len(b) == 0: return max(len(a), len(b))
-    dp = [[0]*(len(b)+1) for i in range(0, len(a)+1)]
+    if len(a) == 0 or len(b) == 0: return (0, max(len(a), len(b)))
+    dp = [[0]*(len(b)+1) for _ in range(0, len(a)+1)]
 
     for i in range(0, len(a)+1): dp[i][0] = i
     for i in range(0, len(b)+1): dp[0][i] = i
@@ -50,11 +49,11 @@ def levenshtein_accuracy(a: str, b: str):
 
 #even if a single mistake exists in a word, the whole word is considered wrong
 #will be coding this later
-def wordwise_accuracy(a: str, b: str):
-    # b (user typed) -> a (original)
+# def wordwise_accuracy(a: str, b: str):
+#     # b (user typed) -> a (original)
 
-    words1 = a.split(" ")
-    words2 = b.split(" ")
+#     words1 = a.split(" ")
+#     words2 = b.split(" ")
 
-    for i in range(0, max(len(words1), len(words2))):
-        pass
+#     for i in range(0, max(len(words1), len(words2))):
+#         pass

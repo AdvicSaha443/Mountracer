@@ -1,4 +1,4 @@
-from .database import get_connection
+from typingtest.database import get_connection
 
 class User:
     def __init__(self, userid: int, username: str, password: str):
@@ -18,13 +18,23 @@ class User:
         cursor = get_connection().cursor()
 
         cursor.execute("CREATE TABLE IF NOT EXISTS races (race_number INT AUTO_INCREMENT PRIMARY KEY, user_id INT, username VARCHAR(64), universe VARCHAR(64), text_id VARCHAR(64), wpm FLOAT(7,4), accuracy FLOAT(5, 4), epoch VARCHAR(64));")
-        cursor.execute(f"SELECT * FROM races WHERE user_id = {self.user_id}")
+        cursor.execute(f"SELECT * FROM races WHERE user_id = {self.user_id};")
         data = cursor.fetchall()
         cursor.close()
 
         if len(data) == 0: return None
         else: return data
+    
+    def fetch_race_info(self, universe: str):
+        cursor = get_connection().cursor()
 
+        cursor.execute("CREATE TABLE IF NOT EXISTS races (race_number INT AUTO_INCREMENT PRIMARY KEY, user_id INT, username VARCHAR(64), universe VARCHAR(64), text_id VARCHAR(64), wpm FLOAT(7,4), accuracy FLOAT(5, 4), epoch VARCHAR(64));")
+        cursor.execute(f"SELECT * FROM races WHERE universe = '{universe}' ORDER BY wpm DESC;")
+        data = cursor.fetchall()
+        cursor.close()
+
+        if len(data) == 0: return None
+        else: return data
 
     def fetch_user_detail(self):
         # cursor = get_connection().cursor()

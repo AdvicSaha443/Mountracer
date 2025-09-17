@@ -1,9 +1,10 @@
 """This file handles all basic commands eg: initializing/navigation, etc etc"""
 
-from .auth import login, create_new_user
-from .session import session
-from .user import User
-from .test import start_test
+from typingtest.auth import login, create_new_user
+from typingtest.session import session
+from typingtest.user import User
+from typingtest.test import start_test
+import time
 
 def initialize():
     while True:
@@ -49,6 +50,7 @@ def initialize():
         elif choice == "2": setting_state()
         elif choice == "3": statistics_state()
         elif choice == "4": leaderboard_state()
+        elif choice == "5": past_test_state()
         else: break
 
 def home_state():
@@ -61,14 +63,14 @@ def home_state():
     if user_data is not None: print(user_data)
 
     print("Current Universe: " + str(session.universe), end= "\n\n")
-    print("Commands:\nTyping Test Menu (0)\nChange Universe (1)\nSettings (2)\nStatistics (3)\nLeaderboard (4)\nLogout/exit (5)")
+    print("Commands:\nTyping Test Menu (0)\nChange Universe (1)\nSettings (2)\nStatistics (3)\nLeaderboard (4)\nHistory (5)\nLogout/exit (6)")
     choice = ""
 
     while True:
         choice = str(input())
 
-        if choice not in ["0", "1", "2", "3", "4", "5"]:
-            print("You must enter 0/1/2/3/4/5\nEnter your choice: ", end="")
+        if choice not in ["0", "1", "2", "3", "4", "5", "6"]:
+            print("You must enter 0/1/2/3/4/5/6\nEnter your choice: ", end="")
             continue
         else: break
 
@@ -131,7 +133,7 @@ def setting_state():
                     choice = input("Enter the new limit (10 < limit < 150): ")
 
                     if int(choice) <= 150 and int(choice) >= 10:
-                        session.get_current_user().set_dictionary_word_limit(choice)
+                        session.get_current_user().set_dictionary_word_limit(int(choice))
                         print(f"Your Dictionary Word Limit has been set to: {choice}")
                     else:
                         print("You must enter a number within 10 and 150")
@@ -142,6 +144,89 @@ def setting_state():
 
 def leaderboard_state():
     print("You're currently in leaderboard state!")
+    print("To view leaderboard, enter a universe:\nPlay (0)\nLong Text (1)\nDictionary (2)\nBack To Home Page (3)\n")
+
+    choice = ""
+    while True:
+        choice = str(input())
+
+        if choice not in ["0", "1", "2", "3"]:
+            print("You must enter 0/1/2/3\nEnter your choice: ", end="")
+            continue
+        else: break
+    
+    universe = ""
+    if choice == "0": universe = "play"
+    elif choice == "1": universe = "longtext"
+    elif choice == "2": universe = "dictionary"
+    else: return
+
+    leaderboard_data = session.get_current_user().fetch_race_info(universe)
+
+    if leaderboard_data is None:
+        input("There's no race data in the database!\nPress Enter to go back!")
+        return
+
+    useful_leaderboard_data = []
+
+    user_added = []
+    for elem in leaderboard_data:
+        if not elem[1] in user_added:
+            useful_leaderboard_data.append(elem)
+            user_added.append(elem[1])
+
+    # displaying the table
+    # start = len(useful_leaderboard_data)
+    start = 0
+    while True:
+        required_leaderboard_info = useful_leaderboard_data[start:start+10]
+
+        # [["Rank", "username", "Text ID", "WPM", "Accuracy", "Time Stamp"]]
+        table = [["Rank", "Username", "Text ID", "WPM", "Accuracy", "Time Stamp"]]
+        
+        for i, race in enumerate(required_leaderboard_info):
+            table.append([(start + (i+1)), race[2], race[4], race[5], round((race[6]*100), 4), time.strftime('%d %b %y %I:%M %p', time.localtime(int(float(race[7]))))])
+
+        max_column_width = [max([len(str(x[i])) for x in table]) for i in range(0, len(table[0]))]
+        for elem in table: print(" | ".join(str(val) + "".join(" " for _ in range(0, max_column_width[i]-len(str(val)))) for i, val in enumerate(elem)))
+
+        if (start+10) >= len(useful_leaderboard_data): break
+        choice = input("\nSee 10 races after this (y/n): ")
+        
+        if choice.lower() in ["yes", "y"]: start+=10
+        else: break
+
+    input("\nPress enter to go back")
+
+def past_test_state(): #alt: history state
+    race_info: list = session.get_current_user().fetch_user_race_info()
+
+    if race_info is None:
+        input("You have performed no test yet!\nPress Enter to go Back")
+        return
+
+    end = len(race_info)
+    while True:
+        if (end-10) < 0: required_race_info = race_info[:end]
+        else: required_race_info = race_info[end-10:end]
+
+        table = [["Race No.", "Universe", "Text ID", "WPM", "Accuracy", "Time Stamp"]]
+        
+        for i, race in enumerate(required_race_info):
+            table.append([(end + ((i+1) - len(required_race_info))), race[3], race[4], race[5], round((race[6]*100), 4), time.strftime('%d %b %y %I:%M %p', time.localtime(int(float(race[7]))))])
+
+        max_column_width = [max([len(str(x[i])) for x in table]) for i in range(0, len(table[0]))]
+        for elem in table: print(" | ".join(str(val) + "".join(" " for _ in range(0, max_column_width[i]-len(str(val)))) for i, val in enumerate(elem)))
+
+        # first need to check whether there are any races left to be displayed
+        # will then just change the end value, and everything else be taken care of
+        if (end-10) <= 0: break
+        choice = input("\nSee 10 races before this (y/n): ")
+        
+        if choice.lower() in ["yes", "y"]: end-=10
+        else: break
+
+    input("\nTo View All the races, download csv file!\nPress enter to go back")
 
 def statistics_state():
     print("You're currently in statistic state!")

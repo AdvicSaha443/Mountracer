@@ -1,6 +1,6 @@
-from .database import get_connection
-from .wpm import calculate_stat
-from .user import User
+from typingtest.database import get_connection
+from typingtest.wpm import calculate_stat
+from typingtest.user import User
 import random
 import time
 import csv
@@ -29,7 +29,7 @@ def start_test(universe: str, user: User, practice: bool = False):
         print("Here is the Statistics from the test: \n")
 
         if universe != "dictionary": print(f"You just typed a quote from: {text[2]}\nAuthor: {text[3]}\n")
-        print(f"wpm: {stat.get('wpm')}\nacc: {stat.get('accuracy')*100.0}%\nraw wpm: {stat.get('raw_wpm')}\ntotal characters/wrong operations: {len(text[1])}/{stat.get('edit_distance')}\n")
+        print(f"wpm: {stat.get('wpm')}\nacc: {stat.get('accuracy')*100.0}%\nraw wpm: {stat.get('raw_wpm')}\ntotal characters/wrong operations: {len(user_text_input)}/{stat.get('edit_distance')}\n")
 
         if practice:
             choice1 = input("Do you want to save this result? (y/n): ")
@@ -47,7 +47,7 @@ def select_text(universe: str, max_range: int):
             return texts[random.randint(0, len(texts)-1)]
         else:
             words = list(csv_reader)[0]
-            text = ["dict", ("".join((words[random.randint(0, len(words)-1)] + " ") for _ in range(0, max_range)))[:-1], "None", "None"]
+            text = [f"dict({str(max_range)})", ("".join((words[random.randint(0, len(words)-1)] + " ") for _ in range(0, max_range)))[:-1], "None", "None"]
 
             return text
 
