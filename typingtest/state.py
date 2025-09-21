@@ -5,6 +5,7 @@ from typingtest.session import session
 from typingtest.user import User
 from typingtest.test import start_test
 import time
+import csv
 
 def initialize():
     while True:
@@ -100,7 +101,6 @@ def test_state():
     elif choice == "2":
         change_universe()
     else: return
-    
 
 def setting_state():
     print("You're currently in the settings state!")
@@ -109,38 +109,33 @@ def setting_state():
     #will be accessing the settings table in the database, will store user's information and preferences.
     user_settings: dict = session.get_current_user().get_user_settings()
 
-    print(f"User id: {user_settings.get('user_id')}\nUsername: {user_settings.get('username')}\nCurrent Universe: {session.universe}\nPreferred Universe: {user_settings.get('preferred_universe')}\nDictionary Mode Word Limit: {user_settings.get('dictionary_word_limit')}")
-    choice = input("\nDo you want to change your preferred universe/dictionary mode word limit? (y/n): ")
+    print(f"\nUser id: {user_settings.get('user_id')}\nUsername: {user_settings.get('username')}\nCurrent Universe: {session.universe}\nPreferred Universe: {user_settings.get('preferred_universe')}\nDictionary Mode Word Limit: {user_settings.get('dictionary_word_limit')}")
+    print("\nChange Preferred Universe (1)\nChange Dictionary mode word limit (2)\nReturn Back to Home Page (3 or Enter)\n")
+    choice = input()
 
-    if choice.lower() in ['yes', 'y']:
-        print("\nChange Universe (0)\nChange Dictionary Mode Word Limit (1)\nExit (2): ")
-        choice = input()
+    if choice == '1':
+        print("\nHere is the list of universe available:\nPlay (0)\nLong Text (1)\nDictionary (2)\n")
+        choice = input("Enter your choice: ")
 
-        if choice in ['0', '1']:
-            if choice == '0':
-                print("Here is the list of universe available:\nPlay (0)\nLong Text (1)\nDictionary (2)\n")
+        if choice in ['0', '1', '2']:
+            #session.set_current_universe(int(choice))
+            session.get_current_user().set_preferred_universe(int(choice))
+        else:
+            print("You must enter 0/1/2\n")
 
-                choice = input("Enter your choice: ")
+    elif choice == '2':
+        try:
+            choice = input("Enter the new limit (10 < limit < 150): ")
 
-                if choice in ['0', '1', '2']:
-                    #session.set_current_universe(int(choice))
-                    session.get_current_user().set_preferred_universe(int(choice))
-                else:
-                    print("You must enter 0/1/2\n")
+            if int(choice) <= 150 and int(choice) >= 10:
+                session.get_current_user().set_dictionary_word_limit(int(choice))
+                print(f"Your Dictionary Word Limit has been set to: {choice}")
             else:
-                # adding code to change the dictionary mode word limit
-                try:
-                    choice = input("Enter the new limit (10 < limit < 150): ")
+                print("You must enter a number within 10 and 150")
+        except:
+            print("You must enter a number within 10 and 150")
 
-                    if int(choice) <= 150 and int(choice) >= 10:
-                        session.get_current_user().set_dictionary_word_limit(int(choice))
-                        print(f"Your Dictionary Word Limit has been set to: {choice}")
-                    else:
-                        print("You must enter a number within 10 and 150")
-                except:
-                    print("You must enter a number within 10 and 150")
-
-
+    else: return
 
 def leaderboard_state():
     print("You're currently in leaderboard state!")
@@ -226,7 +221,16 @@ def past_test_state(): #alt: history state
         if choice.lower() in ["yes", "y"]: end-=10
         else: break
 
-    input("\nTo View All the races, download csv file!\nPress enter to go back")
+    if input("\nTo View All the races, download csv file (1)\nPress enter to go back\n") == '1':
+        with open('races.csv', 'w', newline = '') as f:
+            csv_writer = csv.writer(f)
+            csv_writer.writerow(['Race No.', 'Universe', 'Text ID', 'WPM', 'Accuracy', 'Epoch'])
+
+            for i, races in enumerate(race_info):
+                csv_writer.writerow((i+1,) + races[3:])
+        
+        input("The CSV file has been downloaded in the project's directory\nPress Enter to go back")
+
 
 def statistics_state():
     print("You're currently in statistic state!")

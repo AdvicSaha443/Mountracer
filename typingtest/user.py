@@ -19,7 +19,7 @@ class User:
 
         cursor.execute("CREATE TABLE IF NOT EXISTS races (race_number INT AUTO_INCREMENT PRIMARY KEY, user_id INT, username VARCHAR(64), universe VARCHAR(64), text_id VARCHAR(64), wpm FLOAT(7,4), accuracy FLOAT(5, 4), epoch VARCHAR(64));")
         cursor.execute(f"SELECT * FROM races WHERE user_id = {self.user_id};")
-        data = cursor.fetchall()
+        data = cursor.fetchall() #list of tuples (row -> tuple)
         cursor.close()
 
         if len(data) == 0: return None
