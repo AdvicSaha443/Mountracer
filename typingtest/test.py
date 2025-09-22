@@ -39,7 +39,7 @@ def start_test(universe: str, user: User, practice: bool = False):
         choice = input("Do you want to exit?: (exit): ")
 
 def select_text(universe: str, max_range: int):
-    with open(f"./csv_files/text_{universe}.csv", "r") as f:
+    with open(f"./csv_files/text_{universe}.csv", "r", encoding="utf-8") as f:
         csv_reader = csv.reader(f)
 
         if universe != "dictionary":
