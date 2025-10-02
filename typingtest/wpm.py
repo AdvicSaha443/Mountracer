@@ -19,7 +19,7 @@ def calculate_stat(timestamp: float, timetaken: int, text: list, user_text_input
 """WPM COMMANDS"""
 
 def calculate_wpm(characters: int, time: int, accuracy: float):
-    return ((accuracy/1.0)*(((characters/5.0)/time)*60.0)) #accuracy*raw_wpm
+    return ((accuracy/1.0)*(((characters/5.0)/time)*60.0)) # accuracy*raw_wpm
 
 def calculate_raw_wpm(characters: int, time: int):
     return (((characters/5.0)/time)*60.0) #using average length of a word in English Language
@@ -47,8 +47,8 @@ def levenshtein_accuracy(a: str, b: str):
     print("Edit Distance: " + str(edit_distance))
     return (accuracy, edit_distance)
 
-#even if a single mistake exists in a word, the whole word is considered wrong
-#will be coding this later
+# even if a single mistake exists in a word, the whole word is considered wrong
+# will be coding this later
 # def wordwise_accuracy(a: str, b: str):
 #     # b (user typed) -> a (original)
 

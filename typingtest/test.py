@@ -2,10 +2,11 @@ from typingtest.database import get_connection
 from typingtest.wpm import calculate_stat
 from typingtest.user import User
 import random
+import shutil
 import time
 import csv
 
-def start_test(universe: str, user: User, practice: bool = False):
+def start_test(universe: str, user: User, practice: bool = False, beautify_text: bool = True):
     # test is being start in flow state, hence using while loop
     choice = ""
 
@@ -14,7 +15,7 @@ def start_test(universe: str, user: User, practice: bool = False):
 
         text: list = select_text(universe, user.dictionary_word_limit)
         print("Your time starts now! You may start typing, and once you're done press Enter!\n\n")
-        print(text[1], end = "\n\n")
+        print(beautify(text[1]) if beautify_text else text[1], end = "\n\n")
 
         #taking user input
         start_time = time.perf_counter()
@@ -28,7 +29,8 @@ def start_test(universe: str, user: User, practice: bool = False):
         print("\nYou've Completed the Test!")
         print("Here is the Statistics from the test: \n")
 
-        if universe != "dictionary": print(f"You just typed a quote from: {text[2]}\nAuthor: {text[3]}\n")
+        # if universe != "dictionary": print(f"You just typed a quote from: {text[2] if text[2][0] != '\u2014' else text[2][3:]}\nAuthor: {text[3]}\n") # backslashes cannot appear inside {} of f strings
+        if universe != "dictionary": print("You just typed a quote from: " + (text[2][2:] if text[2][0].startswith('\u2014') else text[2]) + f"\nAuthor: {text[3]}\n") # had to factor in the error obtained from web scrapping
         print(f"wpm: {stat.get('wpm')}\nacc: {stat.get('accuracy')*100.0}%\nraw wpm: {stat.get('raw_wpm')}\ntotal characters/wrong operations: {len(user_text_input)}/{stat.get('edit_distance')}\n")
 
         if practice:
@@ -60,3 +62,20 @@ def save_test_result(stat: dict, user: User):
 
     cursor.close()
     conn.commit()
+
+def beautify(text: str):
+    width = shutil.get_terminal_size().columns
+
+    text_ = text.split(" ")
+    final_text_list = []
+    current_sentence_length = 0
+    
+    for word in text_:
+        if current_sentence_length + len(word) >= width:
+            final_text_list.append("\n" + word)
+            current_sentence_length = len(word)+1 # 1 is added to factor in the space which will be added later
+        else:
+            final_text_list.append(word)
+            current_sentence_length+=len(word)+1
+
+    return "".join((word+ " ") for word in final_text_list)

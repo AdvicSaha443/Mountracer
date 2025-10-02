@@ -94,12 +94,9 @@ def test_state():
             continue
         else: break
     
-    if choice == "0":
-        start_test(session.universe, session.get_current_user())
-    elif choice == "1":
-        start_test(session.universe, session.get_current_user(), True)
-    elif choice == "2":
-        change_universe()
+    if choice == "0": start_test(session.universe, session.get_current_user())
+    elif choice == "1": start_test(session.universe, session.get_current_user(), True)
+    elif choice == "2": change_universe()
     else: return
 
 def setting_state():
@@ -266,6 +263,12 @@ def statistics_state():
     print("Average acc: " + str(average_acc*100.0))
 
     input("\nPress Enter to go back")
+
+def text_information_state():
+    pass
+
+def help_state():
+    pass
 
 
 def change_universe():
