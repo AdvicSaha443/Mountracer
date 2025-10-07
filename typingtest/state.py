@@ -6,6 +6,7 @@ from typingtest.user import User
 from typingtest.test import start_test
 import time
 import csv
+import re
 
 def initialize():
     while True:
@@ -79,11 +80,10 @@ def home_state():
 
 def test_state():
     print("You're currently in the Typing test state!\n")
-
     session.set_current_state("TEST")
 
     print("Current Universe: " + session.universe, end="\n\n")
-    print("Commands:\nStart Test in Flow State (0)\nStart Test in Practice mode (1)\nChange Universe (2)\nReturn to Home Page (3)\n")
+    print("Commands:\nStart Test in Flow State (0)\nStart Test in Practice mode (1)\nChange Universe (2)\nView Text Data (3)\nReturn to Home Page (4 or Enter)\n")
     choice = ""
 
     while True:
@@ -97,6 +97,7 @@ def test_state():
     if choice == "0": start_test(session.universe, session.get_current_user())
     elif choice == "1": start_test(session.universe, session.get_current_user(), True)
     elif choice == "2": change_universe()
+    elif choice == "3": text_information_state()
     else: return
 
 def setting_state():
@@ -106,11 +107,25 @@ def setting_state():
     #will be accessing the settings table in the database, will store user's information and preferences.
     user_settings: dict = session.get_current_user().get_user_settings()
 
-    print(f"\nUser id: {user_settings.get('user_id')}\nUsername: {user_settings.get('username')}\nCurrent Universe: {session.universe}\nPreferred Universe: {user_settings.get('preferred_universe')}\nDictionary Mode Word Limit: {user_settings.get('dictionary_word_limit')}")
-    print("\nChange Preferred Universe (1)\nChange Dictionary mode word limit (2)\nReturn Back to Home Page (3 or Enter)\n")
-    choice = input()
+    print(f"\nUser id: {user_settings.get('user_id')}\nUsername: {user_settings.get('username')}\nRecovery Email: {user_settings.get('email')}\nCurrent Universe: {session.universe}\nPreferred Universe: {user_settings.get('preferred_universe')}\nDictionary Mode Word Limit: {user_settings.get('dictionary_word_limit')}")
+    print("\n" + ('Add' if user_settings.get('email') is None else 'Update') + " Recovery Email (0)\nChange Preferred Universe (1)\nChange Dictionary mode word limit (2)\nReturn Back to Home Page (3 or Enter)\n")
+    choice = input() 
 
-    if choice == '1':
+    if choice == '0':
+        email_input = input("Enter new recovery email: ")
+        email_validation = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+
+        if len(email_input) >= 254:
+            input("The email length must be less than 254 characters!\nPress Enter to go back")
+            return
+        
+        if re.match(email_validation, email_input) is not None:
+            session.get_current_user().set_user_email(email_input)
+            input(f"Your Recovery Email has been set to: {email_input}!\nPress Enter to go back")
+        else:
+            input("Invalid Email Entered!\nPress Enter to go back")
+
+    elif choice == '1':
         print("\nHere is the list of universe available:\nPlay (0)\nLong Text (1)\nDictionary (2)\n")
         choice = input("Enter your choice: ")
 
@@ -228,7 +243,6 @@ def past_test_state(): #alt: history state
         
         input("The CSV file has been downloaded in the project's directory\nPress Enter to go back")
 
-
 def statistics_state():
     print("You're currently in statistic state!")
     race_info = session.get_current_user().fetch_user_race_info()
@@ -259,12 +273,57 @@ def statistics_state():
     print("Race performed in longtext mode: " + str(longtext))
     print("Race performed in dictionary mode: " + str(dictionary), end="\n\n")
 
-    print("Average wpm: " + str(average_wpm))
-    print("Average acc: " + str(average_acc*100.0))
+    print("Average wpm: " + str(round(average_wpm, 4)))
+    print("Average acc: " + str(round(average_acc*100.0, 2)))
 
     input("\nPress Enter to go back")
 
 def text_information_state():
+    print("\nhere you can check data related to tests performed for a specific text using its text id!")
+    print("\nSelect Text Universe:\nPlay (0)\nLong Texts (1)\nDictionary (2)")
+    choice = input()
+    universe = ""
+
+    if choice == "0": universe = "play"
+    elif choice == "1": universe = "longtext"
+    elif choice == "2": universe = "dictionary"
+    else:
+        input("Invalid Number Entered!\nPress Enter to go back!")
+        return
+
+    try:
+        text_id = int(input("Enter the Text id: " if universe != "dictionary" else "Enter The word limit (between 10 and 150): "))
+    except:
+        print("Invalid data entered! You must enter an Integer!")
+        return 
+
+    text_data = get_text_data(universe, text_id)
+    print(text_data)
+
+    """Information to be displayed:
+
+        Text will be displayed (if universe != dictionary)
+        
+        Text Id/word limit: 
+        text author:
+        text source: 
+
+        your stats:
+        your average score for this text: 
+        your average accuracy for this text: 
+        your best score for this text:
+
+        average score for this text
+        average accuracy for this text
+
+        maximum score for this text ___ by username ___ with the accuracy ___
+
+        display the top 5 scores for this text (leaderboard) and at the end display the position of the current user (add dots and stuff to display gap)
+
+    """
+    
+
+def account_state():
     pass
 
 def help_state():
@@ -281,3 +340,89 @@ def change_universe():
         print(f"The current universe has been changed to: {session.universe}")
     else:
         print("You must enter 0/1/2\n")
+
+def get_text_data(universe: str, text_id: int) -> dict:
+
+    if universe == "dictionary": text_id = f"dict({text_id})"
+    current_user = session.get_current_user()
+    test_info = current_user.fetch_race_info(universe, text_id)
+
+    #extracting the top 5 tests for the given text id and also storying the rank of the user in the leaderboard for this particular text
+    useful_test_info = []
+    rank_position = 0
+    user_leaderboard_rank = None
+
+    user_added = set()
+    for test in test_info:
+        if test[1] == current_user.user_id and test[1] not in user_added: user_leaderboard_rank = rank_position+1
+
+        if not test[1] in user_added:
+            rank_position += 1
+            user_added.add(test[1])
+
+            if len(useful_test_info) < 5: useful_test_info.append(test)
+
+        if len(useful_test_info) == 5 and user_leaderboard_rank is not None: break
+    
+    #extracting the average wpm and average accuracy for this text:
+    if test_info:
+        avg_wpm = round(sum(races[5] for races in test_info)/len(test_info), 4)
+        avg_acc = round(sum(races[6] for races in test_info)/len(test_info), 4)
+    else:
+        avg_wpm = avg_acc = 0
+    
+    text_average = (avg_wpm, avg_acc)
+
+    #extracting the text, author, and the source for the book if the universe not equal to dictionary
+    text_data = []
+    if universe != "dictionary":
+        with open(f"./csv_files/text_{universe}.csv", "r", encoding="utf-8") as f:
+            csv_reader = csv.reader(f)
+            texts = list(csv_reader)
+
+            text_data = texts[text_id-1]
+
+    #extracting the details regarding the user's text
+    user_test_info = current_user.fetch_user_race_info(universe, text_id, True)
+
+    if user_test_info:
+        avg_wpm = round(sum(races[5] for races in user_test_info)/len(user_test_info), 4)
+        avg_acc = round(sum(races[6] for races in user_test_info)/len(user_test_info), 4)
+    else:
+        avg_wpm = avg_acc = 0
+    
+    user_average = (avg_wpm, avg_acc)
+
+    return {
+        "text_id": text_id,
+        "text_data": text_data,
+        "user_average": user_average,
+        "user_best": user_test_info[0] if user_test_info is not None else None,
+        "text_average": text_average,
+        "best_five_races": useful_test_info,
+        "user_leaderboard_position": user_leaderboard_rank
+    }
+
+    # useful_test_info = []
+    # user_added = []
+    # user_best_test_info_position = None
+
+    # for test in test_info:
+    #     if len(useful_test_info) < 5:
+    #         if not test[1] in user_added:
+    #             user_added.append(test[1])
+    #             useful_test_info.append(test)
+
+    #             if test[1] == current_user.user_id: user_best_test_info_position = len(useful_test_info)-1
+    #         else: continue
+    #     else:
+    #         if user_best_test_info_position is None:
+    #             if test[1] == current_user.user_id:
+    #                 user_best_test_info_position = 5
+    #                 useful_test_info.append(test)
+    #                 break
+    #             else: continue
+    #         else:
+    #             break
+
+

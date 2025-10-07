@@ -30,7 +30,7 @@ def start_test(universe: str, user: User, practice: bool = False, beautify_text:
         print("Here is the Statistics from the test: \n")
 
         # if universe != "dictionary": print(f"You just typed a quote from: {text[2] if text[2][0] != '\u2014' else text[2][3:]}\nAuthor: {text[3]}\n") # backslashes cannot appear inside {} of f strings
-        if universe != "dictionary": print("You just typed a quote from: " + (text[2][2:] if text[2][0].startswith('\u2014') else text[2]) + f"\nAuthor: {text[3]}\n") # had to factor in the error obtained from web scrapping
+        if universe != "dictionary": print("You just typed a quote from: " + (text[2][2:] if text[2][0].startswith('\u2014') else text[2]) + f"\nAuthor: {text[3]}\n") # had to factor in the error obtained from web scrapping source
         print(f"wpm: {stat.get('wpm')}\nacc: {stat.get('accuracy')*100.0}%\nraw wpm: {stat.get('raw_wpm')}\ntotal characters/wrong operations: {len(user_text_input)}/{stat.get('edit_distance')}\n")
 
         if practice:

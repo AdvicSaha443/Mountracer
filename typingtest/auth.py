@@ -9,7 +9,7 @@ def login():
     password = str(input("Password: "))
 
     cursor = get_connection().cursor()
-    cursor.execute("CREATE TABLE IF NOT EXISTS users (user_id INT AUTO_INCREMENT PRIMARY KEY, username VARCHAR(64) UNIQUE, password VARCHAR(64));")
+    cursor.execute("CREATE TABLE IF NOT EXISTS users (user_id INT AUTO_INCREMENT PRIMARY KEY, username VARCHAR(64) UNIQUE, password VARCHAR(64), email VARCHAR(254));")
     cursor.execute("SELECT * FROM users;") # selecting all the data, and then checking as to add the ability to tell the user whether the username/password is wrong
     users_data = cursor.fetchall()
     cursor.close()
@@ -20,7 +20,7 @@ def login():
                 print("Wrong password entered!\nDirecting back to login page\n")
                 break
             else:
-                session.set_current_user(User(userid = user[0], username=username, password=password))
+                session.set_current_user(User(userid = user[0], username=username, password=password, email = user[3]))
                 return 1
     else: print("User does not exist!\nDirecting back to login page\n")
     
@@ -41,7 +41,7 @@ def create_new_user():
     conn = get_connection()
     cursor = conn.cursor()
     
-    cursor.execute("CREATE TABLE IF NOT EXISTS users (user_id INT AUTO_INCREMENT PRIMARY KEY, username VARCHAR(64) UNIQUE, password VARCHAR(64));")
+    cursor.execute("CREATE TABLE IF NOT EXISTS users (user_id INT AUTO_INCREMENT PRIMARY KEY, username VARCHAR(64) UNIQUE, password VARCHAR(64), email VARCHAR(254));")
     cursor.execute(f"SELECT * FROM users WHERE username = '{username}';")
 
     if len(cursor.fetchall()) == 1:

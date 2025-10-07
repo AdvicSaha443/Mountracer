@@ -1,5 +1,5 @@
 """ GENERAL COMMANDS """
-def calculate_stat(timestamp: float, timetaken: int, text: list, user_text_input: str, universe):
+def calculate_stat(timestamp: float, timetaken: int, text: list, user_text_input: str, universe) -> dict:
     # information required: timetaken, text, user_text_input, start_time
 
     accuracy_info = levenshtein_accuracy(text[1], user_text_input)
