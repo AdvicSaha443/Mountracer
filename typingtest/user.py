@@ -1,7 +1,7 @@
 from typingtest.database import get_connection
 
 class User:
-    def __init__(self, userid: int, username: str, password: str, email):
+    def __init__(self, userid: int, username: str, password: str, email: str):
         self.user_id = userid
         self.username = username
         self.password = password

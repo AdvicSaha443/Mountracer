@@ -1,0 +1,11 @@
+add about and help state -> about page: will describe about the application, and how it calculates the speed, etc. ; help page: will guide the user about how to use the application
+add page to see information regarded text using text id or dictionary mode
+create a library/file to handle terminal (user interface) regarding commands such as beautification commands (dash lines, etc)
+add limits for username and password
+add option to view other user's profile
+add Account/profile state -> where user can view and develop their profile
+add option to reset password, change password, forgot password, take and store their email (for reset password, a mail would be sent to their email) also validate the format of the mail given by the user.
+
+
+errors:
+In test state, return to home page, doesn't work + change is so that Enter or any other input directs the user back to home page

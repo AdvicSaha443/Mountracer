@@ -295,7 +295,7 @@ def text_information_state():
         text_id = int(input("Enter the Text id: " if universe != "dictionary" else "Enter The word limit (between 10 and 150): "))
     except:
         print("Invalid data entered! You must enter an Integer!")
-        return 
+        return
 
     text_data = get_text_data(universe, text_id)
     print(text_data)
@@ -346,7 +346,26 @@ def get_text_data(universe: str, text_id: int) -> dict:
     if universe == "dictionary": text_id = f"dict({text_id})"
     current_user = session.get_current_user()
     test_info = current_user.fetch_race_info(universe, text_id)
+    
+    if test_info is None: return {
+        "err": "No races have been performed for this text!"
+    }
 
+    #extracting the text, author, and the source for the book if the universe not equal to dictionary
+    text_data = []
+
+    try:
+        if universe != "dictionary":
+            with open(f"./csv_files/text_{universe}.csv", "r", encoding="utf-8") as f:
+                csv_reader = csv.reader(f)
+                texts = list(csv_reader)
+
+                text_data = texts[text_id-1]
+    except:
+        return {
+            "err": "The Text does not exist!"
+        }
+    
     #extracting the top 5 tests for the given text id and also storying the rank of the user in the leaderboard for this particular text
     useful_test_info = []
     rank_position = 0
@@ -372,15 +391,6 @@ def get_text_data(universe: str, text_id: int) -> dict:
         avg_wpm = avg_acc = 0
     
     text_average = (avg_wpm, avg_acc)
-
-    #extracting the text, author, and the source for the book if the universe not equal to dictionary
-    text_data = []
-    if universe != "dictionary":
-        with open(f"./csv_files/text_{universe}.csv", "r", encoding="utf-8") as f:
-            csv_reader = csv.reader(f)
-            texts = list(csv_reader)
-
-            text_data = texts[text_id-1]
 
     #extracting the details regarding the user's text
     user_test_info = current_user.fetch_user_race_info(universe, text_id, True)
