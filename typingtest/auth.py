@@ -34,8 +34,8 @@ def create_new_user():
         print("\nUsername/Pasword cannot be None")
         return 0
 
-    if len(username) > 64 or len(password) > 64:
-        print("\nThe Username/Password can consist maximum of 64 letters")
+    if len(username) > 16 or len(password) > 16:
+        print("\nThe Username/Password can consist maximum of 16 letters")
         return 0
 
     conn = get_connection()
