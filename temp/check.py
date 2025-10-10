@@ -1,9 +1,9 @@
 import shutil
+import math
 text = "She had never observed his face more composed and she grabbed his hand and held it to her heart. It was resistless and dry. The outline of a skull was plain under his skin and the deep burned eye sockets seemed to lead into the dark tunnel where he had disappeared. She leaned closer and closer to his face, looking deep into them, trying to see how she had been cheated or what had cheated her, but she couldn't see anything. She shut her eyes and saw the pin point of light but so far away that she could not hold it steady in her mind. She felt as if she were blocked at the entrance of something. She sat staring with her eyes shut, into his eyes, and felt as if she had finally got to the beginning of something she couldn't begin, and she saw him moving farther and farther away, farther and farther into the darkness until he was the pin point of light."
 
 class Table:
     DEFAULT_WIDTH = ["inner_text", "terminal"]
-    OVERFLOW = ["hidden", "new_line"]
     JUSTIFY = ["start", "end", "center"]
     THEMES = {
         "light": {
@@ -60,11 +60,13 @@ class Table:
     def __init__(
         self,
         title: str = None,
-        theme: str = "light"
+        theme: str = "light",
+        responsive: bool = True
     ) -> None:
         
         self._title = title
         self._theme = theme if theme in Table.THEMES else "light"
+        self._responsive = responsive
         self._table = None
 
         self._columns = []
@@ -83,13 +85,12 @@ class Table:
     def rows(self) -> list:
         return self._rows 
     
-    def add_column(self, text: str = None, justify: str = "center", padding: tuple = (0, 0), rows_padding: tuple = (0, 0), overflow: str = "hidden") -> None:
+    def add_column(self, text: str = None, justify: str = "center", padding: tuple = (0, 0), decorate: bool = False) -> None:
         self._columns.append((
             text,
             justify if justify in Table.JUSTIFY else "center",
             padding if len(padding) == 2 else (0, 0),
-            rows_padding if len(rows_padding) == 2 else (0, 0),
-            overflow if overflow in Table.OVERFLOW else "hidden"
+            decorate
         ))
 
     def add_row(self, *values):
@@ -108,8 +109,12 @@ class Table:
         maximum_columns = max(len(columns), len(max(rows, key = len)))
         table = []
 
-        table.append(columns) if len(columns) == maximum_columns else table.append(columns + [""*(maximum_columns-len(columns))] if (maximum_columns-len(columns)) != 0 else [])
-        for row in rows: table.append(row) if len(row) == maximum_columns else table.append(row + [""*(maximum_columns-len(row))] if (maximum_columns - len(row)) != 0 else [])
+        table.append(columns) if len(columns) == maximum_columns else table.append(columns + [""*(maximum_columns-len(columns))])
+        for i, row in enumerate(rows): table.append(row) if len(row) == maximum_columns else table.append(row + [""*(maximum_columns-len(row))])
+
+        for i, column in enumerate(columns_settings):
+            if column[3]: # decorate is true
+                for j in range(1, len(table)): table[j][i] = " " + str(table[j][i]).strip() + " "
 
         # calculating the maximum admissible length for each column
         max_column_length = [max([len(str(x[i])) for x in table]) for i in range(0, len(table[0]))]
@@ -119,7 +124,32 @@ class Table:
         terminal_width = shutil.get_terminal_size().columns
 
         #check whether if table_width is greater than the terminal width
-        if terminal_width < table_width: print("Terminal width is greater than the table width!")
+
+        if terminal_width < table_width and self._responsive:
+            diff = table_width - terminal_width
+
+            if (diff/maximum_columns) < 1:
+                max_length = max(max_column_length)
+                pos = max_column_length.index(max_length)
+                max_limit = max_length - diff
+
+                if max_limit > 0:
+                    for i, elem in enumerate(table):
+                        if len(elem[pos]) > max_limit: table[i][pos] = table[i][pos][0:(max_limit - 3)] + "..."
+            else:
+                column_diff = math.floor(diff/maximum_columns) + 1
+
+                # will be required to check each element i*j and compress the element which exceeds the column_diff
+                for i in range(0, len(table[0])):
+                    column_max_limit = max_column_length[i] - column_diff
+
+                    for j in range(0, len(table)):
+                        if len(table[j][i]) > column_max_limit: table[j][i] = table[j][i][0:(column_max_limit-3)] + "..."
+
+            # recalculating the maximum column width, table_width
+            max_column_length = [max([len(str(x[i])) for x in table]) for i in range(0, len(table[0]))]
+            table_width = sum(max_column_length) + 1 + len(table[0])
+
 
         # building the table:
         if title is not None:
@@ -135,22 +165,24 @@ class Table:
         #table_ += theme["tl"] + ((theme["h"]*max_column_length[i] + theme["t"]) for i in range(0, len(max_column_length)))[:-1] + theme["tr"]
         table_ += theme["tl"] + "".join((theme["h"]*max_column_length[i] + theme.get("t")) for i in range(0, len(max_column_length)))[:-1] + theme["tr"] + "\n"
 
-        # calculating justified position for each column:
+        # calculating justified position for each column header:
         justified_header = []
         for i, elem in enumerate(table[0]):
-            if columns_settings[i][1] == "start": justified_header.append(elem + "".join(" " for _ in range(len(elem), max_column_length[i])))
-            elif columns_settings[i][1] == "end": justified_header.append("".join(" " for _ in range(0, max_column_length[i]-len(elem))) + elem)
-            elif columns_settings[i][1] == "center":
-                current_column_width = max_column_length[i]
+            if not elem == "":
+                if columns_settings[i][1] == "start": justified_header.append(elem + "".join(" " for _ in range(len(elem), max_column_length[i])))
+                elif columns_settings[i][1] == "end": justified_header.append("".join(" " for _ in range(0, max_column_length[i]-len(elem))) + elem)
+                elif columns_settings[i][1] == "center":
+                    current_column_width = max_column_length[i]
 
-                if current_column_width%2 != 0:
-                    if len(elem)%2 != 0: title_position = ((current_column_width-1)/2) - (len(elem)-1)/2
-                    else: title_position = (current_column_width-1)/2 - len(elem)/2
-                else:
-                    if len(elem)%2 == 0: title_position = (current_column_width/2) - len(elem)/2
-                    else: title_position = current_column_width/2 - (len(elem)-1)/2
+                    if current_column_width%2 != 0:
+                        if len(elem)%2 != 0: title_position = ((current_column_width-1)/2) - (len(elem)-1)/2
+                        else: title_position = (current_column_width-1)/2 - len(elem)/2
+                    else:
+                        if len(elem)%2 == 0: title_position = (current_column_width/2) - len(elem)/2
+                        else: title_position = current_column_width/2 - (len(elem)-1)/2
 
-                justified_header.append(" "*(int(title_position)) + elem + " "*(current_column_width - len(elem) - int(title_position)))
+                    justified_header.append(" "*(int(title_position)) + elem + " "*(current_column_width - len(elem) - int(title_position)))
+            else: justified_header.append(" "*max_column_length[i])
         
         table_ += theme["v"] + theme["v"].join(justified_header) + theme["v"] + "\n"
         table_ += theme["l"] + "".join((theme["h"]*max_column_length[i] + theme.get("c")) for i in range(0, len(max_column_length)))[:-1] + theme["r"] + "\n"
@@ -350,33 +382,48 @@ class Panel:
 #     default_width = "terminal"
 # )
 
-# panel3 = Panel()
+panel3 = Panel(width=25, default_width="inner_text")
 
-# panel3.set_title(
-#     title = " TITLE "
-# )
-# panel3.set_inner_text(
-#     inner_text = "This is a sample text!",
-#     default_width = "terminal",
-#     inner_text_padding= (0, 0, 2, 2)
-# )
+panel3.set_title(
+    title = " TITLE "
+)
+
+panel3.set_inner_text(
+    inner_text = "12345678901234567890124",
+    default_width = "terminal",
+    inner_text_padding= (0, 2, 0, 0)
+)
 
 # print(panel1)
 # print(panel2)
-# print(panel3)
+print(panel3)
 
 table1 = Table(
-    title= "Star Wars Movies"
+    title="Popular Tech Gadgets of the Decade",
+    theme="mix_double_outer",
+    responsive=True
 )
 
-table1.add_column(text= "Released", justify="center")
-table1.add_column(text= "Title", justify="center")
-table1.add_column(text= "Box Office", justify="center")
+table1.add_column(text="Released", justify="center", decorate=True)
+table1.add_column(text="Product", justify="center", decorate=True)
+table1.add_column(text="Units Sold", justify="center", decorate=True)
+table1.add_column(text="Manufacturer", justify="center", decorate=True)
 
-table1.add_row("Dec 20, 2019 ", "Star Wars: The Rise of Skywalker", "$952,110,690")
-table1.add_row("May 25, 2018", "Solo: A Star Wars Story", "$393,151,347")
-table1.add_row("Dec 15, 2017", "Star Wars Ep. V111: The Last Jedi", "$1,332,539,889")
-table1.add_row("Dec 16, 2016", "Rogue One: A Star Wars Story", "$1,332,439,889")
+table1.add_row("Nov 10, 2020", "PlayStation 5", "58 million+", "Sony")
+table1.add_row("Oct 13, 2020", "iPhone 12", "100 million+", "Apple")
+table1.add_row("Oct 6, 2020", "Google Pixel 5", "7 million+", "Google")
+table1.add_row("Mar 3, 2017", "Nintendo Switch", "141 million+", "Nintendo")
+table1.add_row("Oct 26, 2018", "OnePlus 6T", "15 million+", "OnePlus")
+table1.add_row("Mar 25, 2019", "AirPods 2", "90 million+", "Apple")
+table1.add_row("Jul 25, 2019", "Samsung Galaxy Note 10", "9 million+", "Samsung")
+table1.add_row("Oct 13, 2016", "Google Home", "55 million+", "Google")
+table1.add_row("Sep 18, 2015", "Amazon Echo (2nd Gen)", "40 million+", "Amazon")
+table1.add_row("Nov 12, 2019", "Disney+ Subscription Launch", "160 million+", "Disney")
+table1.add_row("Mar 24, 2021", "Xiaomi Mi 11 Ultra", "4 million+", "Xiaomi")
+table1.add_row("Apr 15, 2021", "Huawei P50 Pro", "3 million+", "Huawei")
+table1.add_row("Oct 4, 2023", "Meta Quest 3", "1.5 million+", "Meta")
+table1.add_row("Nov 3, 2017", "Tesla Model 3", "2 million+", "Tesla")
+table1.add_row("Sep 21, 2018", "Apple Watch Series 4", "33 million+", "Apple")
 
 print(table1)
 
