@@ -6,6 +6,9 @@ add option to view other user's profile
 add Account/profile state -> where user can view and develop their profile
 add option to reset password, change password, forgot password, take and store their email (for reset password, a mail would be sent to their email) also validate the format of the mail given by the user.
 
+add add_columns_with_default_settings() function in Table Class.
 
 errors:
 In test state, return to home page, doesn't work + change is so that Enter or any other input directs the user back to home page
+
+line 118 ui_components.py, beautify_rows parameter doesn't work since in some cases column_settings is None, thus loop is never iterated.

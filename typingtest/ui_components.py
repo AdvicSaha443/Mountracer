@@ -1,6 +1,5 @@
 import shutil
 import math
-text = "She had never observed his face more composed and she grabbed his hand and held it to her heart. It was resistless and dry. The outline of a skull was plain under his skin and the deep burned eye sockets seemed to lead into the dark tunnel where he had disappeared. She leaned closer and closer to his face, looking deep into them, trying to see how she had been cheated or what had cheated her, but she couldn't see anything. She shut her eyes and saw the pin point of light but so far away that she could not hold it steady in her mind. She felt as if she were blocked at the entrance of something. She sat staring with her eyes shut, into his eyes, and felt as if she had finally got to the beginning of something she couldn't begin, and she saw him moving farther and farther away, farther and farther into the darkness until he was the pin point of light."
 
 class Table:
     DEFAULT_WIDTH = ["inner_text", "terminal"]
@@ -66,7 +65,7 @@ class Table:
         responsive: bool = True
     ) -> None:
         
-        self._title = str(title)
+        self._title = title
         self._show_header = show_header
         self._theme = theme if theme in Table.THEMES else "light"
         self._beautify_rows = beautify_rows
@@ -371,75 +370,3 @@ class Panel:
                 current_sentence_length+=len(word)+1
 
         return "".join((word+ " ") for word in final_text_list)
-
-# panel1 = Panel(
-#     title=" Sample Title ",
-#     justify_title="center",
-#     title_padding=(0, 0),
-#     inner_text_padding=(1, 0, 2, 1),
-#     inner_text = "This is a sample line!\nThis is another sample line!\nThis is reallllllllyyyyyyyyyyyyyyyyyyy looooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong textttttt\n\nShe had never observed his face more composed and she grabbed his hand and held it to her heart. It was resistless and dry. The outline of a skull was plain under his skin and the deep burned eye sockets seemed to lead into the dark tunnel where he had disappeared. She leaned closer and closer to his face, looking deep into them, trying to see how she had been cheated or what had cheated her, but she couldn't see anything. She shut her eyes and saw the pin point of light but so far away that she could not hold it steady in her mind. She felt as if she were blocked at the entrance of something. She sat staring with her eyes shut, into his eyes, and felt as if she had finally got to the beginning of something she couldn't begin, and she saw him moving farther and farther away, farther and farther into the darkness until he was the pin point of light.",
-#     theme = "ascii", 
-#     default_width="",
-#     overflow="new_line"
-# )
-# panel2 = Panel(
-#     inner_text = "This is a sample text!",
-#     theme = "heavy",
-#     default_width = "terminal"
-# )
-
-panel3 = Panel(width=25, default_width="inner_text")
-
-panel3.set_title(
-    title = " TITLE "
-)
-
-panel3.set_inner_text(
-    inner_text = "12345678901234567890124",
-    default_width = "terminal",
-    inner_text_padding= (0, 2, 0, 0)
-)
-
-# print(panel1)
-# print(panel2)
-print(panel3)
-
-table1 = Table(
-    title="Popular Tech Gadgets of the Decade",
-    theme="mix_double_outer",
-    responsive=True,
-    show_header = False
-)
-
-table1.add_column(text="Released", justify="center", decorate=True)
-table1.add_column(text="Product", justify="center", decorate=True)
-table1.add_column(text="Units Sold", justify="center", decorate=True)
-table1.add_column(text="Manufacturer", justify="center", decorate=True)
-
-table1.add_row("Nov 10, 2020", "PlayStation 5", "58 million+", "Sony")
-table1.add_row("Oct 13, 2020", "iPhone 12", "100 million+", "Apple")
-table1.add_row("Oct 6, 2020", "Google Pixel 5", "7 million+", "Google")
-table1.add_row("Mar 3, 2017", "Nintendo Switch", "141 million+", "Nintendo")
-table1.add_row("Oct 26, 2018", "OnePlus 6T", "15 million+", "OnePlus")
-table1.add_row("Mar 25, 2019", "AirPods 2", "90 million+", "Apple")
-table1.add_row("Jul 25, 2019", "Samsung Galaxy Note 10", "9 million+", "Samsung")
-table1.add_row("Oct 13, 2016", "Google Home", "55 million+", "Google")
-table1.add_row("Sep 18, 2015", "Amazon Echo (2nd Gen)", "40 million+", "Amazon")
-table1.add_row("Nov 12, 2019", "Disney+ Subscription Launch", "160 million+", "Disney")
-table1.add_row("Mar 24, 2021", "Xiaomi Mi 11 Ultra", "4 million+", "Xiaomi")
-table1.add_row("Apr 15, 2021", "Huawei P50 Pro", "3 million+", "Huawei")
-table1.add_row("Oct 4, 2023", "Meta Quest 3", "1.5 million+", "Meta")
-table1.add_row("Nov 3, 2017", "Tesla Model 3", "2 million+", "Tesla")
-table1.add_row("Sep 21, 2018", "Apple Watch Series 4", "33 million+", "Apple")
-
-print(table1)
-
-
-
-# terminal_dimensions = shutil.get_terminal_size()
-
-# print(f"Width: {terminal_dimensions.columns}")
-# print("".join("=" for _ in range(0, terminal_dimensions.columns)))
-# print(beautify(text))
-# print("".join("=" for _ in range(0, terminal_dimensions.columns)))
-# print(text)

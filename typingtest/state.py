@@ -1,6 +1,7 @@
 """This file handles all basic commands eg: initializing/navigation, etc etc"""
 
 from typingtest.auth import login, create_new_user
+from typingtest.ui_components import Table, Panel
 from typingtest.session import session
 from typingtest.user import User
 from typingtest.test import start_test
@@ -300,6 +301,85 @@ def text_information_state():
     text_data = get_text_data(universe, text_id)
     print(text_data)
 
+    if len(text_data) == 1:
+        input(text_data.get('err'))
+        return
+
+    if universe != "dictionary":
+        text_detail = text_data.get("text_data")
+
+        text_panel = Panel(
+            title = " Text Details ",
+            justify_title = "center",
+            inner_text = f"{text_detail[1]}\n\nfrom: " + ((text_detail[2][2:] if text_detail[2][0].startswith('\u2014') else text_detail[2])) + f"\nby: {text_detail[3]}",
+            inner_text_padding = (0, 0, 1, 1),
+            default_width = "inner_text",
+            overflow = "new_line",
+            theme = "rounded"
+        )
+
+        print("\n" + str(text_panel) + "\n")
+    else:
+        print("Word Limit: " + str(text_id) + "\n")
+
+    user_text_table = Table(
+        title = "Your Statistics",
+        show_header = False,
+        beautify_rows = True,
+        responsive = True
+    )
+
+    user_text_table.add_row("Average WPM:", text_data.get("user_average")[0])
+    user_text_table.add_row("Average ACC:", text_data.get("user_average")[1])
+
+    user_best_table = Table(
+        title = "Your Best",
+        beautify_rows = True
+    )
+    user_best_table.add_column("Text ID")
+    user_best_table.add_column("WPM")
+    user_best_table.add_column("Accuracy")
+    user_best_table.add_column("Time Stamp")
+
+    # perhaps change this to user top 5
+    user_best = text_data.get('user_best')
+    user_best_table.add_row(user_best[4], user_best[5], user_best[6], time.strftime('%d %b %y %I:%M %p', time.localtime(int(float(user_best[7])))))
+
+    general_info_table = Table(
+        title = "Overall Statistics",
+        show_header = False,
+        beautify_rows = True,
+        responsive = True
+    )
+
+    general_info_table.add_row("Average WPM: ", text_data.get("text_average")[0])
+    general_info_table.add_row("Average ACC: ", text_data.get("text_average")[1])
+
+    all_race_info = text_data.get("best_five_races")
+
+    race_info_table = Table(
+        title = "Leaderboard for this text",
+        beautify_rows = True
+    )
+
+    race_info_table.add_column("Rank")
+    race_info_table.add_column("Username")
+    race_info_table.add_column("Text ID")
+    race_info_table.add_column("WPM")
+    race_info_table.add_column("Accuracy")
+    race_info_table.add_column("Time Stamp")
+
+    for i, race in enumerate(all_race_info): race_info_table.add_row(i+1, race[2], race[4], race[5], race[6], time.strftime('%d %b %y %I:%M %p', time.localtime(int(float(race[7])))))
+    if text_data.get('user_leaderboard_position') is not None:
+        if text_data.get('user_leaderboard_position') > 5: race_info_table.add_row(text_data.get('user_leaderboard_position'), user_best[2], user_best[4], user_best[5], user_best[6], time.strftime('%d %b %y %I:%M %p', time.localtime(int(float(user_best[7])))))
+
+    print(user_text_table)
+    print(user_best_table)
+    print(general_info_table)
+    print(race_info_table)
+
+    input("Press enter to go back!")
+
     """Information to be displayed:
 
         Text will be displayed (if universe != dictionary)
@@ -434,5 +514,3 @@ def get_text_data(universe: str, text_id: int) -> dict:
     #             else: continue
     #         else:
     #             break
-
-
