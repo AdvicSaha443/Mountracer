@@ -112,12 +112,17 @@ class Table:
         maximum_columns = max(len(columns), len(max(rows, key = len)))
         table = []
 
-        if header_visible: table.append(columns) if len(columns) == maximum_columns else table.append(columns + [""*(maximum_columns-len(columns))])
-        for i, row in enumerate(rows): table.append(row) if len(row) == maximum_columns else table.append(row + [""*(maximum_columns-len(row))])
+        if header_visible: table.append(columns) if len(columns) == maximum_columns else table.append(columns + [""]*(maximum_columns-len(columns)))
+        for i, row in enumerate(rows): table.append(row) if len(row) == maximum_columns else table.append(row + [""]*(maximum_columns-len(row)))
 
         for i, column in enumerate(columns_settings):
             if column[3] or self._beautify_rows: # decorate is true
                 for j in range(1 if header_visible else 0, len(table)): table[j][i] = " " + str(table[j][i]).strip() + " "
+        
+        if not header_visible and len(columns_settings) == 0 and self._beautify_rows:
+            for i in range(0, len(table)):
+                for j in range(0, len(table[i])):
+                    table[i][j] = " " + table[i][j] + " "
 
         # calculating the maximum admissible length for each column
         max_column_length = [max([len(str(x[i])) for x in table]) for i in range(0, len(table[0]))]
@@ -236,7 +241,7 @@ class Panel:
             height: int = None,
             overflow: str = "hidden" # values possible: hidden, dotted, new_line
         ) -> None:
-        self._title = str(title)
+        self._title = title
         self._justify_title = justify_title if justify_title in Panel.JUSTIFY else "center"
         self._title_padding = title_padding if len(title_padding) == 2 else (0, 0)
         self._inner_text = str(inner_text)
@@ -370,3 +375,33 @@ class Panel:
                 current_sentence_length+=len(word)+1
 
         return "".join((word+ " ") for word in final_text_list)
+    
+
+class Line:
+    THEMES = {
+        "light": {"h": "─", "v": "│", "tl": "┌", "tr": "┐", "bl": "└", "br": "┘"},
+        "double": {"h": "═", "v": "║", "tl": "╔", "tr": "╗", "bl": "╚", "br": "╝"},
+        "rounded": {"h": "─", "v": "│", "tl": "╭", "tr": "╮", "bl": "╰", "br": "╯"},
+        "heavy": {"h": "━", "v": "┃", "tl": "┏", "tr": "┓", "bl": "┗", "br": "┛"},
+        "dashed": {"h": "╌", "v": "╎", "tl": "┌", "tr": "┐", "bl": "└", "br": "┘"},
+        "dotted": {"h": "┈", "v": "┊", "tl": "┌", "tr": "┐", "bl": "└", "br": "┘"},
+        "mix_heavy_top": {"h": "━", "v": "│", "tl": "┏", "tr": "┓", "bl": "└", "br": "┘"},
+        "mix_double_outer": {"h": "═", "v": "║", "tl": "╔", "tr": "╗", "bl": "╚", "br": "╝"},
+        "ascii": {"h": "-", "v": "|", "tl": "+", "tr": "+", "bl": "+", "br": "+"},
+    }
+
+    def __init__(self):
+        pass
+
+    @classmethod
+    def print_line(
+        cls,
+        theme: str = "light",
+        text: str = None,
+        justify_text: str = "center",
+        text_padding: tuple = (0, 0), # left, right
+        line_padding: tuple = (0, 0, 0, 0), # left, right, top, bottom
+        width: int = None,
+        default_width: str = "terminal"
+    ) -> str:
+        return ""

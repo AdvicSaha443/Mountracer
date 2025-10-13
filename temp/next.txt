@@ -1,14 +1,38 @@
 add about and help state -> about page: will describe about the application, and how it calculates the speed, etc. ; help page: will guide the user about how to use the application
-add page to see information regarded text using text id or dictionary mode
-create a library/file to handle terminal (user interface) regarding commands such as beautification commands (dash lines, etc)
-add limits for username and password
+add limits for username and password and add password validation regex
 add option to view other user's profile
 add Account/profile state -> where user can view and develop their profile
-add option to reset password, change password, forgot password, take and store their email (for reset password, a mail would be sent to their email) also validate the format of the mail given by the user.
+add option to reset password, change password, forgot password, take and store their email (for reset password, an email would be sent to their email) also validate the format of the mail given by the user.
 
+impement Panel, Table, and Line class and beautify the user interface
 add add_columns_with_default_settings() function in Table Class.
+add Line class to print lines, basic structure has already been added
+
+In Panel Class, add an option to add header
+change UI design, similar to the design suggested by chatgpt (Mountracer/state.py file request)
+
+In Panel class, add an option to add multiple inner texts in different boxes attached to one panel
+similar to this: 
+╭──────────────────────────────────────────────╮
+│                 ⚙️ SETTINGS                 │
+├──────────────────────────────────────────────┤
+│  User: qwerty443                             │
+│  Current Universe: Play                      │
+│  Preferred Universe: Long Text               │
+│  Dictionary Limit: 50                        │
+├──────────────────────────────────────────────┤
+│  [1] Recovery Email                          │
+│  [2] Change Universe                         │
+│  [3] Dictionary Limit                        │
+│  [4] Back to Home                            │
+╰──────────────────────────────────────────────╯
+Enter your choice: _
+
 
 errors:
 In test state, return to home page, doesn't work + change is so that Enter or any other input directs the user back to home page
+add functionality to check whether unicode characters are supported or not in user's terminal
 
-line 118 ui_components.py, beautify_rows parameter doesn't work since in some cases column_settings is None, thus loop is never iterated.
+FIXED - line 118 ui_components.py, beautify_rows parameter doesn't work since in some cases column_settings is None, thus loop is never iterated.
+ADDED - create a library/file to handle terminal (user interface) regarding commands such as beautification commands (dash lines, etc)
+ADDED - add page to see information regarded text using text id or dictionary mode

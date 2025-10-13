@@ -54,6 +54,7 @@ def initialize():
         elif choice == "3": statistics_state()
         elif choice == "4": leaderboard_state()
         elif choice == "5": past_test_state()
+        elif choice == "6": account_state()
         else: break
 
 def home_state():
@@ -66,14 +67,14 @@ def home_state():
     if user_data is not None: print(user_data)
 
     print("Current Universe: " + str(session.universe), end= "\n\n")
-    print("Commands:\nTyping Test Menu (0)\nChange Universe (1)\nSettings (2)\nStatistics (3)\nLeaderboard (4)\nHistory (5)\nLogout/exit (6)")
+    print("Commands:\nTyping Test Menu (0)\nChange Universe (1)\nSettings (2)\nStatistics (3)\nLeaderboard (4)\nHistory (5)\nYour Profile (6)\nLogout/exit (7)")
     choice = ""
 
     while True:
         choice = str(input())
 
-        if choice not in ["0", "1", "2", "3", "4", "5", "6"]:
-            print("You must enter 0/1/2/3/4/5/6\nEnter your choice: ", end="")
+        if choice not in ["0", "1", "2", "3", "4", "5", "6", "7"]:
+            print("You must enter 0/1/2/3/4/5/6/7\nEnter your choice: ", end="")
             continue
         else: break
 
@@ -105,10 +106,26 @@ def setting_state():
     print("You're currently in the settings state!")
     session.set_current_state("SETTINGS")
 
+    settings_table = Table(
+        title = "Settings: ",
+        show_header = False,
+        beautify_rows = True,
+        theme = "rounded"
+    )
+
     #will be accessing the settings table in the database, will store user's information and preferences.
     user_settings: dict = session.get_current_user().get_user_settings()
 
-    print(f"\nUser id: {user_settings.get('user_id')}\nUsername: {user_settings.get('username')}\nRecovery Email: {user_settings.get('email')}\nCurrent Universe: {session.universe}\nPreferred Universe: {user_settings.get('preferred_universe')}\nDictionary Mode Word Limit: {user_settings.get('dictionary_word_limit')}")
+    settings_table.add_row("User ID", user_settings.get('user_id'))
+    settings_table.add_row("Username", user_settings.get('username'))
+    settings_table.add_row("Recovery Email", user_settings.get('email'))
+    settings_table.add_row("Current Universe", session.universe)
+    settings_table.add_row("Preferred Universe", user_settings.get('preferred_universe'))
+    settings_table.add_row("Dictionary Word Limit", user_settings.get('dictionary_word_limit'))
+
+    print(settings_table)
+
+    # print(f"\nUser id: {user_settings.get('user_id')}\nUsername: {user_settings.get('username')}\nRecovery Email: {user_settings.get('email')}\nCurrent Universe: {session.universe}\nPreferred Universe: {user_settings.get('preferred_universe')}\nDictionary Mode Word Limit: {user_settings.get('dictionary_word_limit')}")
     print("\n" + ('Add' if user_settings.get('email') is None else 'Update') + " Recovery Email (0)\nChange Preferred Universe (1)\nChange Dictionary mode word limit (2)\nReturn Back to Home Page (3 or Enter)\n")
     choice = input() 
 
@@ -332,6 +349,8 @@ def text_information_state():
     user_text_table.add_row("Average WPM:", text_data.get("user_average")[0])
     user_text_table.add_row("Average ACC:", text_data.get("user_average")[1])
 
+    print(user_text_table)
+
     user_best_table = Table(
         title = "Your Best",
         beautify_rows = True
@@ -343,7 +362,9 @@ def text_information_state():
 
     # perhaps change this to user top 5
     user_best = text_data.get('user_best')
-    user_best_table.add_row(user_best[4], user_best[5], user_best[6], time.strftime('%d %b %y %I:%M %p', time.localtime(int(float(user_best[7])))))
+    if user_best is not None:
+        user_best_table.add_row(user_best[4], user_best[5], str(round(user_best[6]*100, 3)) + "%", time.strftime('%d %b %y %I:%M %p', time.localtime(int(float(user_best[7])))))
+        print(user_best_table)
 
     general_info_table = Table(
         title = "Overall Statistics",
@@ -358,7 +379,7 @@ def text_information_state():
     all_race_info = text_data.get("best_five_races")
 
     race_info_table = Table(
-        title = "Leaderboard for this text",
+        title = "Leaderboard for this text" if universe != "dictionary" else "Leaderboard for this word limit",
         beautify_rows = True
     )
 
@@ -371,10 +392,10 @@ def text_information_state():
 
     for i, race in enumerate(all_race_info): race_info_table.add_row(i+1, race[2], race[4], race[5], race[6], time.strftime('%d %b %y %I:%M %p', time.localtime(int(float(race[7])))))
     if text_data.get('user_leaderboard_position') is not None:
-        if text_data.get('user_leaderboard_position') > 5: race_info_table.add_row(text_data.get('user_leaderboard_position'), user_best[2], user_best[4], user_best[5], user_best[6], time.strftime('%d %b %y %I:%M %p', time.localtime(int(float(user_best[7])))))
+        if text_data.get('user_leaderboard_position') > 5:
+            if text_data.get('user_leaderboard_position') != 6: race_info_table.add_row(":")
+            race_info_table.add_row(text_data.get('user_leaderboard_position'), user_best[2], user_best[4], user_best[5], user_best[6], time.strftime('%d %b %y %I:%M %p', time.localtime(int(float(user_best[7])))))
 
-    print(user_text_table)
-    print(user_best_table)
     print(general_info_table)
     print(race_info_table)
 
@@ -404,7 +425,9 @@ def text_information_state():
     
 
 def account_state():
-    pass
+    print("You're in the account state!")
+
+
 
 def help_state():
     pass
@@ -492,25 +515,3 @@ def get_text_data(universe: str, text_id: int) -> dict:
         "best_five_races": useful_test_info,
         "user_leaderboard_position": user_leaderboard_rank
     }
-
-    # useful_test_info = []
-    # user_added = []
-    # user_best_test_info_position = None
-
-    # for test in test_info:
-    #     if len(useful_test_info) < 5:
-    #         if not test[1] in user_added:
-    #             user_added.append(test[1])
-    #             useful_test_info.append(test)
-
-    #             if test[1] == current_user.user_id: user_best_test_info_position = len(useful_test_info)-1
-    #         else: continue
-    #     else:
-    #         if user_best_test_info_position is None:
-    #             if test[1] == current_user.user_id:
-    #                 user_best_test_info_position = 5
-    #                 useful_test_info.append(test)
-    #                 break
-    #             else: continue
-    #         else:
-    #             break

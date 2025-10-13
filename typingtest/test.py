@@ -1,4 +1,5 @@
 from typingtest.database import get_connection
+from typingtest.ui_components import Panel
 from typingtest.wpm import calculate_stat
 from typingtest.user import User
 import random
@@ -14,15 +15,21 @@ def start_test(universe: str, user: User, practice: bool = False, beautify_text:
         if choice == "exit": break
 
         text: list = select_text(universe, user.dictionary_word_limit)
-        print("Your time starts now! You may start typing, and once you're done press Enter!\n\n")
-        print(beautify(text[1]) if beautify_text else text[1], end = "\n\n")
+        print("Your time starts now! You may start typing, and once you're done press Enter!\n")
+        # print(beautify(text[1]) if beautify_text else text[1], end = "\n\n")
+        print(Panel(
+            inner_text = text[1],
+            overflow = "new_line",
+            theme = "rounded",
+            default_width = 'terminal',
+            inner_text_padding = (1, 1, 1, 1)
+        ), end="\n\n")
 
         #taking user input
         start_time = time.perf_counter()
         user_text_input = str(input())
 
         end_time = time.perf_counter()
-        print(end_time - start_time)
         stat = calculate_stat(time.mktime(time.localtime()), (end_time - start_time), text, user_text_input, universe)
 
         # Display information related to current test

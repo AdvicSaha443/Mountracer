@@ -113,12 +113,17 @@ class Table:
         maximum_columns = max(len(columns), len(max(rows, key = len)))
         table = []
 
-        if header_visible: table.append(columns) if len(columns) == maximum_columns else table.append(columns + [""*(maximum_columns-len(columns))])
-        for i, row in enumerate(rows): table.append(row) if len(row) == maximum_columns else table.append(row + [""*(maximum_columns-len(row))])
+        if header_visible: table.append(columns) if len(columns) == maximum_columns else table.append(columns + [""]*(maximum_columns-len(columns)))
+        for i, row in enumerate(rows): table.append(row) if len(row) == maximum_columns else table.append(row + [""]*(maximum_columns-len(row)))
 
         for i, column in enumerate(columns_settings):
             if column[3] or self._beautify_rows: # decorate is true
                 for j in range(1 if header_visible else 0, len(table)): table[j][i] = " " + str(table[j][i]).strip() + " "
+
+        if not header_visible and len(columns_settings) == 0 and self._beautify_rows:
+            for i in range(0, len(table)):
+                for j in range(0, len(table[i])):
+                    table[i][j] = " " + table[i][j] + " "
 
         # calculating the maximum admissible length for each column
         max_column_length = [max([len(str(x[i])) for x in table]) for i in range(0, len(table[0]))]
@@ -237,7 +242,7 @@ class Panel:
             height: int = None,
             overflow: str = "hidden" # values possible: hidden, dotted, new_line
         ) -> None:
-        self._title = str(title)
+        self._title = title
         self._justify_title = justify_title if justify_title in Panel.JUSTIFY else "center"
         self._title_padding = title_padding if len(title_padding) == 2 else (0, 0)
         self._inner_text = str(inner_text)
@@ -372,21 +377,21 @@ class Panel:
 
         return "".join((word+ " ") for word in final_text_list)
 
-# panel1 = Panel(
-#     title=" Sample Title ",
-#     justify_title="center",
-#     title_padding=(0, 0),
-#     inner_text_padding=(1, 0, 2, 1),
-#     inner_text = "This is a sample line!\nThis is another sample line!\nThis is reallllllllyyyyyyyyyyyyyyyyyyy looooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong textttttt\n\nShe had never observed his face more composed and she grabbed his hand and held it to her heart. It was resistless and dry. The outline of a skull was plain under his skin and the deep burned eye sockets seemed to lead into the dark tunnel where he had disappeared. She leaned closer and closer to his face, looking deep into them, trying to see how she had been cheated or what had cheated her, but she couldn't see anything. She shut her eyes and saw the pin point of light but so far away that she could not hold it steady in her mind. She felt as if she were blocked at the entrance of something. She sat staring with her eyes shut, into his eyes, and felt as if she had finally got to the beginning of something she couldn't begin, and she saw him moving farther and farther away, farther and farther into the darkness until he was the pin point of light.",
-#     theme = "ascii", 
-#     default_width="",
-#     overflow="new_line"
-# )
-# panel2 = Panel(
-#     inner_text = "This is a sample text!",
-#     theme = "heavy",
-#     default_width = "terminal"
-# )
+panel1 = Panel(
+    title=" Sample Title ",
+    justify_title="start",
+    title_padding=(10, 0),
+    inner_text_padding=(1, 0, 10, 1), # left, right, top, bottom
+    inner_text = "This is a sample line!\nThis is another sample line!\nThis is reallllllllyyyyyyyyyyyyyyyyyyy looooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong textttttt\n\nShe had never observed his face more composed and she grabbed his hand and held it to her heart. It was resistless and dry. The outline of a skull was plain under his skin and the deep burned eye sockets seemed to lead into the dark tunnel where he had disappeared. She leaned closer and closer to his face, looking deep into them, trying to see how she had been cheated or what had cheated her, but she couldn't see anything. She shut her eyes and saw the pin point of light but so far away that she could not hold it steady in her mind. She felt as if she were blocked at the entrance of something. She sat staring with her eyes shut, into his eyes, and felt as if she had finally got to the beginning of something she couldn't begin, and she saw him moving farther and farther away, farther and farther into the darkness until he was the pin point of light.",
+    theme = "rounded", 
+    default_width="",
+    overflow="new_line"
+)
+panel2 = Panel(
+    inner_text = "This is a sample text!",
+    theme = "heavy",
+    default_width = "terminal"
+)
 
 panel3 = Panel(width=25, default_width="inner_text")
 
@@ -400,20 +405,20 @@ panel3.set_inner_text(
     inner_text_padding= (0, 2, 0, 0)
 )
 
-# print(panel1)
+print(panel1)
 # print(panel2)
 print(panel3)
 
 table1 = Table(
     title="Popular Tech Gadgets of the Decade",
-    theme="mix_double_outer",
+    theme="rounded",
     responsive=True,
-    show_header = False
+    show_header = True
 )
 
-table1.add_column(text="Released", justify="center", decorate=True)
-table1.add_column(text="Product", justify="center", decorate=True)
-table1.add_column(text="Units Sold", justify="center", decorate=True)
+table1.add_column(text="Released", justify="center", decorate=False)
+table1.add_column(text="Product", justify="center", decorate=False)
+table1.add_column(text="Units Sold", justify="center", decorate=False)
 table1.add_column(text="Manufacturer", justify="center", decorate=True)
 
 table1.add_row("Nov 10, 2020", "PlayStation 5", "58 million+", "Sony")
@@ -432,7 +437,7 @@ table1.add_row("Oct 4, 2023", "Meta Quest 3", "1.5 million+", "Meta")
 table1.add_row("Nov 3, 2017", "Tesla Model 3", "2 million+", "Tesla")
 table1.add_row("Sep 21, 2018", "Apple Watch Series 4", "33 million+", "Apple")
 
-print(table1)
+# print(table1)
 
 
 
