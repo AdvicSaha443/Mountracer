@@ -264,7 +264,7 @@ class Panel:
         pass
 
     def set_title(self, title: str = None, justify: str = "center", padding: tuple = (0, 0)) -> None:
-        self._title = str(title)
+        self._title = title
         self._justify_title = justify if justify in Panel.JUSTIFY else "center"
         self._title_padding = padding if len(padding) == 2 else (0, 0)
     
@@ -376,66 +376,143 @@ class Panel:
                 current_sentence_length+=len(word)+1
 
         return "".join((word+ " ") for word in final_text_list)
+    
+class Line:
+    THEMES = {
+        "light": {"h": "─", "v": "│", "tl": "┌", "tr": "┐", "bl": "└", "br": "┘"},
+        "double": {"h": "═", "v": "║", "tl": "╔", "tr": "╗", "bl": "╚", "br": "╝"},
+        "rounded": {"h": "─", "v": "│", "tl": "╭", "tr": "╮", "bl": "╰", "br": "╯"},
+        "heavy": {"h": "━", "v": "┃", "tl": "┏", "tr": "┓", "bl": "┗", "br": "┛"},
+        "dashed": {"h": "╌", "v": "╎", "tl": "┌", "tr": "┐", "bl": "└", "br": "┘"},
+        "dotted": {"h": "┈", "v": "┊", "tl": "┌", "tr": "┐", "bl": "└", "br": "┘"},
+        "mix_heavy_top": {"h": "━", "v": "│", "tl": "┏", "tr": "┓", "bl": "└", "br": "┘"},
+        "mix_double_outer": {"h": "═", "v": "║", "tl": "╔", "tr": "╗", "bl": "╚", "br": "╝"},
+        "ascii": {"h": "-", "v": "|", "tl": "+", "tr": "+", "bl": "+", "br": "+"},
+    }
+    DEFAULT_WIDTH = ["inner_text", "terminal"]
+    OVERFLOW = ["hidden", "new_line"]
+    JUSTIFY = ["start", "end", "center"]
 
-panel1 = Panel(
-    title=" Sample Title ",
-    justify_title="start",
-    title_padding=(10, 0),
-    inner_text_padding=(1, 0, 10, 1), # left, right, top, bottom
-    inner_text = "This is a sample line!\nThis is another sample line!\nThis is reallllllllyyyyyyyyyyyyyyyyyyy looooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong textttttt\n\nShe had never observed his face more composed and she grabbed his hand and held it to her heart. It was resistless and dry. The outline of a skull was plain under his skin and the deep burned eye sockets seemed to lead into the dark tunnel where he had disappeared. She leaned closer and closer to his face, looking deep into them, trying to see how she had been cheated or what had cheated her, but she couldn't see anything. She shut her eyes and saw the pin point of light but so far away that she could not hold it steady in her mind. She felt as if she were blocked at the entrance of something. She sat staring with her eyes shut, into his eyes, and felt as if she had finally got to the beginning of something she couldn't begin, and she saw him moving farther and farther away, farther and farther into the darkness until he was the pin point of light.",
-    theme = "rounded", 
-    default_width="",
-    overflow="new_line"
-)
-panel2 = Panel(
-    inner_text = "This is a sample text!",
-    theme = "heavy",
-    default_width = "terminal"
-)
+    def __init__(self):
+        pass
 
-panel3 = Panel(width=25, default_width="inner_text")
+    @classmethod
+    def get_line(
+        cls,
+        theme: str = "light",
+        text: str = None,
+        justify_text: str = "center",
+        text_padding: tuple = (0, 0), # left, right,
+        justify_line: str = "start", 
+        line_padding: tuple = (0, 0, 0, 0), # left, right, top, bottom
+        width: int = None,
+    ) -> str:
+        theme = cls.THEMES[theme] if theme in cls.THEMES else cls.THEMES["light"]
+        justify_text = justify_text if justify_text in cls.JUSTIFY else "center"
+        text_padding = text_padding if len(text_padding) == 2 else (0, 0)
+        line_padding = line_padding if len(line_padding) == 4 else (0, 0, 0, 0) # left, right, top, bottom
+        justify_line = justify_line if justify_line in cls.JUSTIFY else "start"
+        terminal_width = shutil.get_terminal_size().columns
 
-panel3.set_title(
-    title = " TITLE "
-)
+        if width is not None and width > terminal_width: width = terminal_width
+        if width is None or width == 0: width = terminal_width
+        text_position = 0
 
-panel3.set_inner_text(
-    inner_text = "12345678901234567890124",
-    default_width = "terminal",
-    inner_text_padding= (0, 2, 0, 0)
-)
+        if text is not None:
+            if justify_text == "center":
+                if width%2 != 0:
+                    if len(text)%2 != 0: text_position = ((width-1)/2) - (len(text)-1)/2
+                    else: text_position = (width-1)/2 - len(text)/2
+                else:
+                    if len(text)%2 == 0: text_position = (width/2 - 1) - len(text)/2
+                    else: text_position = width/2 - (len(text)-1)/2
+            elif justify_text == "end": text_position = (width - len(text) - text_padding[1])
+            elif justify_text == "start": text_position = text_padding[0]
 
-print(panel1)
-# print(panel2)
-print(panel3)
+        text_position = int(text_position)
+        line = theme["h"]*width if text is None else theme["h"]*text_position + text + theme["h"]*(width - text_position - len(text))
 
-table1 = Table(
-    title="Popular Tech Gadgets of the Decade",
-    theme="rounded",
-    responsive=True,
-    show_header = True
-)
+        if width == terminal_width or justify_line == "start": line = " "*line_padding[0] + line
+        elif justify_line == "end": line = " "*(terminal_width - width - line_padding[1]) + line
+        else: line = " "*int(math.floor((terminal_width - width)/2.0)) + line
 
-table1.add_column(text="Released", justify="center", decorate=False)
-table1.add_column(text="Product", justify="center", decorate=False)
-table1.add_column(text="Units Sold", justify="center", decorate=False)
-table1.add_column(text="Manufacturer", justify="center", decorate=True)
+        return "\n"*line_padding[2] + line + "\n"*line_padding[3]
 
-table1.add_row("Nov 10, 2020", "PlayStation 5", "58 million+", "Sony")
-table1.add_row("Oct 13, 2020", "iPhone 12", "100 million+", "Apple")
-table1.add_row("Oct 6, 2020", "Google Pixel 5", "7 million+", "Google")
-table1.add_row("Mar 3, 2017", "Nintendo Switch", "141 million+", "Nintendo")
-table1.add_row("Oct 26, 2018", "OnePlus 6T", "15 million+", "OnePlus")
-table1.add_row("Mar 25, 2019", "AirPods 2", "90 million+", "Apple")
-table1.add_row("Jul 25, 2019", "Samsung Galaxy Note 10", "9 million+", "Samsung")
-table1.add_row("Oct 13, 2016", "Google Home", "55 million+", "Google")
-table1.add_row("Sep 18, 2015", "Amazon Echo (2nd Gen)", "40 million+", "Amazon")
-table1.add_row("Nov 12, 2019", "Disney+ Subscription Launch", "160 million+", "Disney")
-table1.add_row("Mar 24, 2021", "Xiaomi Mi 11 Ultra", "4 million+", "Xiaomi")
-table1.add_row("Apr 15, 2021", "Huawei P50 Pro", "3 million+", "Huawei")
-table1.add_row("Oct 4, 2023", "Meta Quest 3", "1.5 million+", "Meta")
-table1.add_row("Nov 3, 2017", "Tesla Model 3", "2 million+", "Tesla")
-table1.add_row("Sep 21, 2018", "Apple Watch Series 4", "33 million+", "Apple")
+    @classmethod
+    def print_line(
+        cls,
+        theme: str = "light",
+        text: str = None,
+        justify_text: str = "center",
+        text_padding: tuple = (0, 0), # left, right,
+        justify_line: str = "start", 
+        line_padding: tuple = (0, 0, 0, 0), # left, right, top, bottom
+        width: int = None,
+    ) -> None:
+        print(cls.get_line(theme, text, justify_text, text_padding, justify_line, line_padding, width), end = "")
+
+Line.print_line(text = " Someone ", justify_text = "start", text_padding = (5, 5), width = 50, justify_line = "start", line_padding = (10, 5, 1, 1))
+
+
+# panel1 = Panel(
+#     title=" Sample Title ",
+#     justify_title="start",
+#     title_padding=(10, 0),
+#     inner_text_padding=(1, 0, 10, 1), # left, right, top, bottom
+#     inner_text = "This is a sample line!\nThis is another sample line!\nThis is reallllllllyyyyyyyyyyyyyyyyyyy looooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong textttttt\n\nShe had never observed his face more composed and she grabbed his hand and held it to her heart. It was resistless and dry. The outline of a skull was plain under his skin and the deep burned eye sockets seemed to lead into the dark tunnel where he had disappeared. She leaned closer and closer to his face, looking deep into them, trying to see how she had been cheated or what had cheated her, but she couldn't see anything. She shut her eyes and saw the pin point of light but so far away that she could not hold it steady in her mind. She felt as if she were blocked at the entrance of something. She sat staring with her eyes shut, into his eyes, and felt as if she had finally got to the beginning of something she couldn't begin, and she saw him moving farther and farther away, farther and farther into the darkness until he was the pin point of light.",
+#     theme = "rounded", 
+#     default_width="",
+#     overflow="new_line"
+# )
+# panel2 = Panel(
+#     inner_text = "This is a sample text!",
+#     theme = "heavy",
+#     default_width = "terminal"
+# )
+
+# panel3 = Panel(width=25, default_width="inner_text")
+
+# panel3.set_title(
+#     title = " TITLE "
+# )
+
+# panel3.set_inner_text(
+#     inner_text = "12345678901234567890124",
+#     default_width = "terminal",
+#     inner_text_padding= (0, 2, 0, 0)
+# )
+
+# print(panel1)
+# # print(panel2)
+# print(panel3)
+
+# table1 = Table(
+#     title="Popular Tech Gadgets of the Decade",
+#     theme="rounded",
+#     responsive=True,
+#     show_header = True
+# )
+
+# table1.add_column(text="Released", justify="center", decorate=False)
+# table1.add_column(text="Product", justify="center", decorate=False)
+# table1.add_column(text="Units Sold", justify="center", decorate=False)
+# table1.add_column(text="Manufacturer", justify="center", decorate=True)
+
+# table1.add_row("Nov 10, 2020", "PlayStation 5", "58 million+", "Sony")
+# table1.add_row("Oct 13, 2020", "iPhone 12", "100 million+", "Apple")
+# table1.add_row("Oct 6, 2020", "Google Pixel 5", "7 million+", "Google")
+# table1.add_row("Mar 3, 2017", "Nintendo Switch", "141 million+", "Nintendo")
+# table1.add_row("Oct 26, 2018", "OnePlus 6T", "15 million+", "OnePlus")
+# table1.add_row("Mar 25, 2019", "AirPods 2", "90 million+", "Apple")
+# table1.add_row("Jul 25, 2019", "Samsung Galaxy Note 10", "9 million+", "Samsung")
+# table1.add_row("Oct 13, 2016", "Google Home", "55 million+", "Google")
+# table1.add_row("Sep 18, 2015", "Amazon Echo (2nd Gen)", "40 million+", "Amazon")
+# table1.add_row("Nov 12, 2019", "Disney+ Subscription Launch", "160 million+", "Disney")
+# table1.add_row("Mar 24, 2021", "Xiaomi Mi 11 Ultra", "4 million+", "Xiaomi")
+# table1.add_row("Apr 15, 2021", "Huawei P50 Pro", "3 million+", "Huawei")
+# table1.add_row("Oct 4, 2023", "Meta Quest 3", "1.5 million+", "Meta")
+# table1.add_row("Nov 3, 2017", "Tesla Model 3", "2 million+", "Tesla")
+# table1.add_row("Sep 21, 2018", "Apple Watch Series 4", "33 million+", "Apple")
 
 # print(table1)
 

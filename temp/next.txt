@@ -6,7 +6,6 @@ add option to reset password, change password, forgot password, take and store t
 
 impement Panel, Table, and Line class and beautify the user interface
 add add_columns_with_default_settings() function in Table Class.
-add Line class to print lines, basic structure has already been added
 
 In Panel Class, add an option to add header
 change UI design, similar to the design suggested by chatgpt (Mountracer/state.py file request)
@@ -30,9 +29,13 @@ Enter your choice: _
 
 
 errors:
+
 In test state, return to home page, doesn't work + change is so that Enter or any other input directs the user back to home page
 add functionality to check whether unicode characters are supported or not in user's terminal
 
+completed:
+
+ADDED - add Line class to print lines, basic structure has already been added
 FIXED - line 118 ui_components.py, beautify_rows parameter doesn't work since in some cases column_settings is None, thus loop is never iterated.
 ADDED - create a library/file to handle terminal (user interface) regarding commands such as beautification commands (dash lines, etc)
 ADDED - add page to see information regarded text using text id or dictionary mode

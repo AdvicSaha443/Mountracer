@@ -263,7 +263,7 @@ class Panel:
         pass
 
     def set_title(self, title: str = None, justify: str = "center", padding: tuple = (0, 0)) -> None:
-        self._title = str(title)
+        self._title = title
         self._justify_title = justify if justify in Panel.JUSTIFY else "center"
         self._title_padding = padding if len(padding) == 2 else (0, 0)
     
@@ -375,7 +375,6 @@ class Panel:
                 current_sentence_length+=len(word)+1
 
         return "".join((word+ " ") for word in final_text_list)
-    
 
 class Line:
     THEMES = {
@@ -389,9 +388,54 @@ class Line:
         "mix_double_outer": {"h": "═", "v": "║", "tl": "╔", "tr": "╗", "bl": "╚", "br": "╝"},
         "ascii": {"h": "-", "v": "|", "tl": "+", "tr": "+", "bl": "+", "br": "+"},
     }
+    DEFAULT_WIDTH = ["inner_text", "terminal"]
+    OVERFLOW = ["hidden", "new_line"]
+    JUSTIFY = ["start", "end", "center"]
 
     def __init__(self):
         pass
+
+    @classmethod
+    def get_line(
+        cls,
+        theme: str = "light",
+        text: str = None,
+        justify_text: str = "center",
+        text_padding: tuple = (0, 0), # left, right,
+        justify_line: str = "start", 
+        line_padding: tuple = (0, 0, 0, 0), # left, right, top, bottom
+        width: int = None,
+    ) -> str:
+        theme = cls.THEMES[theme] if theme in cls.THEMES else cls.THEMES["light"]
+        justify_text = justify_text if justify_text in cls.JUSTIFY else "center"
+        text_padding = text_padding if len(text_padding) == 2 else (0, 0)
+        line_padding = line_padding if len(line_padding) == 4 else (0, 0, 0, 0) # left, right, top, bottom
+        justify_line = justify_line if justify_line in cls.JUSTIFY else "start"
+        terminal_width = shutil.get_terminal_size().columns
+
+        if width is not None and width > terminal_width: width = terminal_width
+        if width is None or width == 0: width = terminal_width
+        text_position = 0
+
+        if text is not None:
+            if justify_text == "center":
+                if width%2 != 0:
+                    if len(text)%2 != 0: text_position = ((width-1)/2) - (len(text)-1)/2
+                    else: text_position = (width-1)/2 - len(text)/2
+                else:
+                    if len(text)%2 == 0: text_position = (width/2 - 1) - len(text)/2
+                    else: text_position = width/2 - (len(text)-1)/2
+            elif justify_text == "end": text_position = (width - len(text) - text_padding[1])
+            elif justify_text == "start": text_position = text_padding[0]
+
+        text_position = int(text_position)
+        line = theme["h"]*width if text is None else theme["h"]*text_position + text + theme["h"]*(width - text_position - len(text))
+
+        if width == terminal_width or justify_line == "start": line = " "*line_padding[0] + line
+        elif justify_line == "end": line = " "*(terminal_width - width - line_padding[1]) + line
+        else: line = " "*int(math.floor((terminal_width - width)/2.0)) + line
+
+        return "\n"*line_padding[2] + line + "\n"*line_padding[3]
 
     @classmethod
     def print_line(
@@ -399,9 +443,9 @@ class Line:
         theme: str = "light",
         text: str = None,
         justify_text: str = "center",
-        text_padding: tuple = (0, 0), # left, right
+        text_padding: tuple = (0, 0), # left, right,
+        justify_line: str = "start", 
         line_padding: tuple = (0, 0, 0, 0), # left, right, top, bottom
         width: int = None,
-        default_width: str = "terminal"
-    ) -> str:
-        return ""
+    ) -> None:
+        print(cls.get_line(theme, text, justify_text, text_padding, justify_line, line_padding, width), end = "")
