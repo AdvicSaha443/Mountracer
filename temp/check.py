@@ -211,15 +211,51 @@ class Table:
 
 class Panel:
     THEMES = {
-        "light": {"h": "─", "v": "│", "tl": "┌", "tr": "┐", "bl": "└", "br": "┘"},
-        "double": {"h": "═", "v": "║", "tl": "╔", "tr": "╗", "bl": "╚", "br": "╝"},
-        "rounded": {"h": "─", "v": "│", "tl": "╭", "tr": "╮", "bl": "╰", "br": "╯"},
-        "heavy": {"h": "━", "v": "┃", "tl": "┏", "tr": "┓", "bl": "┗", "br": "┛"},
-        "dashed": {"h": "╌", "v": "╎", "tl": "┌", "tr": "┐", "bl": "└", "br": "┘"},
-        "dotted": {"h": "┈", "v": "┊", "tl": "┌", "tr": "┐", "bl": "└", "br": "┘"},
-        "mix_heavy_top": {"h": "━", "v": "│", "tl": "┏", "tr": "┓", "bl": "└", "br": "┘"},
-        "mix_double_outer": {"h": "═", "v": "║", "tl": "╔", "tr": "╗", "bl": "╚", "br": "╝"},
-        "ascii": {"h": "-", "v": "|", "tl": "+", "tr": "+", "bl": "+", "br": "+"},
+        "light": {
+            "h": "─", "v": "│",
+            "tl": "┌", "tr": "┐", "bl": "└", "br": "┘",
+            "t": "┬", "b": "┴", "l": "├", "r": "┤", "c": "┼",
+        },
+        "double": {
+            "h": "═", "v": "║",
+            "tl": "╔", "tr": "╗", "bl": "╚", "br": "╝",
+            "t": "╦", "b": "╩", "l": "╠", "r": "╣", "c": "╬",
+        },
+        "rounded": {
+            "h": "─", "v": "│",
+            "tl": "╭", "tr": "╮", "bl": "╰", "br": "╯",
+            "t": "┬", "b": "┴", "l": "├", "r": "┤", "c": "┼",
+        },
+        "heavy": {
+            "h": "━", "v": "┃",
+            "tl": "┏", "tr": "┓", "bl": "┗", "br": "┛",
+            "t": "┳", "b": "┻", "l": "┣", "r": "┫", "c": "╋",
+        },
+        "dashed": {
+            "h": "╌", "v": "╎",
+            "tl": "┌", "tr": "┐", "bl": "└", "br": "┘",
+            "t": "┬", "b": "┴", "l": "├", "r": "┤", "c": "┼",
+        },
+        "dotted": {
+            "h": "┈", "v": "┊",
+            "tl": "┌", "tr": "┐", "bl": "└", "br": "┘",
+            "t": "┬", "b": "┴", "l": "├", "r": "┤", "c": "┼",
+        },
+        "mix_heavy_top": {
+            "h": "━", "v": "│",
+            "tl": "┏", "tr": "┓", "bl": "└", "br": "┘",
+            "t": "┳", "b": "┴", "l": "├", "r": "┤", "c": "┼",
+        },
+        "mix_double_outer": {
+            "h": "═", "v": "║",
+            "tl": "╔", "tr": "╗", "bl": "╚", "br": "╝",
+            "t": "╦", "b": "╩", "l": "╠", "r": "╣", "c": "╬",
+        },
+        "ascii": {
+            "h": "-", "v": "|",
+            "tl": "+", "tr": "+", "bl": "+", "br": "+",
+            "t": "+", "b": "+", "l": "+", "r": "+", "c": "+",
+        },
     }
     DEFAULT_WIDTH = ["inner_text", "terminal"]
     OVERFLOW = ["hidden", "new_line"]
@@ -234,26 +270,33 @@ class Panel:
             title: str = None,
             justify_title: str = "center",
             title_padding: tuple = (0, 0), # left, right
+            header_text: str = None, # if header is added, title won't be visible.
+            justify_header: str = "center",
+            header_padding: tuple = (0, 0, 0, 0), # left, right, top, bottom
             inner_text: str = None,
             inner_text_padding: tuple = (0, 0, 0, 0), # left, right, top, bottom
             theme: str = "light",
             width: int = None,
             default_width = "inner_text",
             height: int = None,
-            overflow: str = "hidden" # values possible: hidden, dotted, new_line
+            overflow: str = "hidden", # values possible: hidden, dotted, new_line
+            automatic_padding_reduction: bool = False # setting this to true would help in cases where the inner text is not that big and the user wants to add more padding to beautify the output, but since it can cause problems in small terminals, user wants to reduce the padding instead of compressing the text in cases of small terminals
         ) -> None:
         self._title = title
         self._justify_title = justify_title if justify_title in Panel.JUSTIFY else "center"
         self._title_padding = title_padding if len(title_padding) == 2 else (0, 0)
-        self._inner_text = str(inner_text)
-        self._inner_text_padding = inner_text_padding if len(inner_text_padding) == 4 else (0, 0, 0, 0)
+        self._header_text = header_text
+        self._justify_header = justify_header if justify_header in Panel.JUSTIFY else "center"
+        self._header_padding = header_padding if len(header_padding) == 4 else (0, 0, 0, 0)
         self._theme = theme if theme in Panel.THEMES else "light"
         self._width = width
         self._default_width = default_width if default_width in Panel.DEFAULT_WIDTH else "inner_text"
         self._height = height
         self._overflow = overflow if overflow in Panel.OVERFLOW else "hidden"
+        self._automatic_padding_reduction = automatic_padding_reduction
 
         self.__panel = ""
+        self.__inner_text_list = [[inner_text.split("\n"), inner_text_padding if len(inner_text_padding) == 4 else (0, 0, 0, 0), overflow if overflow in Panel.OVERFLOW else "hidden"]] if inner_text is not None else []
     
     def __str__(self):
         self.__update_panel()
@@ -268,83 +311,128 @@ class Panel:
         self._justify_title = justify if justify in Panel.JUSTIFY else "center"
         self._title_padding = padding if len(padding) == 2 else (0, 0)
     
-    def set_inner_text(self, inner_text: str = None, inner_text_padding: tuple = (0, 0, 0, 0), default_width: str = "inner_text", overflow: str = "hidden") -> None:
-        self._inner_text = str(inner_text)
-        self._inner_text_padding = inner_text_padding if len(inner_text_padding) == 4 else (0, 0, 0, 0)
-        self._default_width = default_width if default_width in Panel.DEFAULT_WIDTH else "inner_text"
-        self._overflow = overflow if overflow in Panel.OVERFLOW else "hidden"
+    def set_header(self, text: str = None, justify: str = "center", padding: tuple = (0, 0, 0, 0)) -> None:
+        self._header_text = text
+        self._justify_header = justify if justify in Panel.JUSTIFY else "center"
+        self._header_padding = padding if len(padding) == 4 else (0, 0, 0, 0)
+    
+    def add_inner_text(self, inner_text: str = None, inner_text_padding: tuple = (0, 0, 0, 0), overflow: str = "hidden") -> None:
+        self.__inner_text_list.append([inner_text.split("\n") if inner_text is not None else "", inner_text_padding if len(inner_text_padding) == 4 else (0, 0, 0, 0), overflow if overflow in Panel.OVERFLOW else "hidden"])
 
     def __update_panel(self) -> None:
-        inner_text = self._inner_text.split("\n") if self._inner_text is not None else ""
-        inner_text_padding = self._inner_text_padding
+        
+        inner_text_list = self.__inner_text_list
         terminal_width = shutil.get_terminal_size().columns
+
+        header_text = self._header_text
+        justify_header = self._justify_header
+        header_padding = self._header_padding
 
         title = self._title
         justify_title = self._justify_title
         title_padding = self._title_padding
 
-        # check here if length of width is greater than the length of terminal, if yes, check overflow and for overflow = newline use beautify function to compress the inner text lines
-        if inner_text != "":
-            if len(max(inner_text, key=len)) + 2 + inner_text_padding[0] + inner_text_padding[1] > terminal_width:
+        theme = Panel.THEMES[self._theme]
+        panel = ""
+
+        # first maximum table width will be calculated
+
+        # setting the maximum length of the table as the lenght of the max(header, title), and will be comparing it with the inner texts length in the for loop
+        max_panel_length = max(len(header_text) + header_padding[0] + header_padding[1] + 2 if header_text is not None else 0, len(title) + 2 if title is not None else 0)
+        
+        # to do so, first we need to check and compress if the inner text exceeds the terminal width or the width specified by the user
+        for i, inner_text_ in enumerate(inner_text_list):
+
+            inner_text = inner_text_[0]
+            inner_text_padding = inner_text_[1]
+            overflow = inner_text_[2]
+            max_inner_text_length = len(max(inner_text, key=len))
+
+            if max_inner_text_length + 2 + inner_text_padding[0] + inner_text_padding[1] > terminal_width:
+
+                # first checking whether if changing the inner text padding would solve the issue or not
+                if max_inner_text_length < terminal_width and self._automatic_padding_reduction:
+                    # only reducing the right padding
+                    inner_text_padding = (inner_text_padding[0], (inner_text_padding[1] - (max_inner_text_length + 2 + inner_text_padding[0] + inner_text_padding[1] - terminal_width) if not (max_inner_text_length+ 2 + inner_text_padding[0] + inner_text_padding[1]-terminal_width) > inner_text_padding[1] else 0), inner_text_padding[2], inner_text_padding[3])
+
                 # changing the lines which would cause a problem:
                 new_inner_text = []
                 for line in inner_text:
                     if len(line) + 2 + inner_text_padding[0] + inner_text_padding[1] > terminal_width:
-                        if self._overflow == "new_line": new_inner_text += self.__beautify(text = line, width = (terminal_width - 2 - inner_text_padding[0] - inner_text_padding[1])).split("\n")
+                        if overflow == "new_line": new_inner_text += self.__beautify(text = line, width = (terminal_width - 2 - inner_text_padding[0] - inner_text_padding[1])).split("\n")
                         else: new_inner_text.append(line[0:(terminal_width - 2 - inner_text_padding[0] - inner_text_padding[1] - 3)] + "...")
                     else:
                         new_inner_text.append(line)
 
-                inner_text = new_inner_text
+                inner_text_list[i] = [new_inner_text, inner_text_padding, overflow]
+            
+            # getting the maximum length for this inner text and comparing it with max_panel_length
+            max_panel_length = max(max_panel_length, (len(max(inner_text_list[i][0], key=len)) + 2 + inner_text_padding[0] + inner_text_padding[1]))
 
-        if inner_text == "" and self._default_width == "inner_text": self._width = terminal_width
-        elif self._default_width == "inner_text" and self._width is None: self._width = len(max(inner_text, key=len)) + 2 + inner_text_padding[0] + inner_text_padding[1] # +2 since borders also needs to be considered
+        # till here we have the maximum panel length, before starting with table building we need to take care of the default_width
+
+        if len(inner_text_list) == 0 and self._default_width == "inner_text": self._width = terminal_width
+        elif self._default_width == "inner_text" and self._width is None: self._width = max_panel_length
         elif self._default_width == "terminal" and self._width is None: self._width = terminal_width
         width = self._width
 
-        height = self._height if (self._height != 0 and self._height is not None) else len(inner_text)+2
-        theme = Panel.THEMES[self._theme]
+        # now that we have the table width, we can proceed with table building
 
-        # dealing with first line
-        # the position variables considers the literal position (first place is zero)
+        # first taking care of the first line/header stuff
         first_line = ""
-        if title is not None:
-            if justify_title == "start": title_position = (1+title_padding[0]) # since justify is start, we're only considering the left padding
-            elif justify_title == "end": title_position = ((width-1) - len(title) - title_padding[1])
-            else:
-                if width%2 != 0:
-                    if len(title)%2 != 0: title_position = ((width-1)/2) - (len(title)-1)/2
-                    else: title_position = (width-1)/2 - len(title)/2
+        if self._header_text is None:
+            if title is not None:
+                if justify_title == "start": title_position = (1+title_padding[0]) # since justify is start, we're only considering the left padding
+                elif justify_title == "end": title_position = ((width-1) - len(title) - title_padding[1])
                 else:
-                    if len(title)%2 == 0: title_position = (width/2 - 1) - len(title)/2
-                    else: title_position = width/2 - (len(title)-1)/2
+                    if width%2 != 0:
+                        if len(title)%2 != 0: title_position = ((width-1)/2) - (len(title)-1)/2
+                        else: title_position = (width-1)/2 - len(title)/2
+                    else:
+                        if len(title)%2 == 0: title_position = (width/2 - 1) - len(title)/2
+                        else: title_position = width/2 - (len(title)-1)/2
 
-            first_line = theme["tl"]
-            first_line += "".join(theme["h"] for _ in range(1, int(title_position))) # replace these with string multiplication
-            first_line += title
-            first_line += "".join(theme["h"] for _ in range(int(title_position)+len(title), width-1))
-            first_line += theme["tr"]
+                first_line = theme["tl"]
+                first_line += "".join(theme["h"] for _ in range(1, int(title_position))) # replace these with string multiplication
+                first_line += title
+                first_line += "".join(theme["h"] for _ in range(int(title_position)+len(title), width-1)) 
+                first_line += theme["tr"]
+            else:
+                first_line = theme["tl"] + theme["h"]*(width-2) + theme["tr"]
         else:
-            first_line = theme["tl"] + theme["h"]*(width-2) + theme["tr"]
+            if justify_header == "start": header_position = (1+header_padding[0]) # since justify is start, we're only considering the left padding
+            elif justify_header == "end": header_position = ((width-1) - len(header_text) - header_padding[1])
+            else: header_position = math.floor((width-len(header_text))/2.0)
 
-        # dealing with the intermediate lines
-        middle_lines = ""
-        middle_lines += (theme["v"] + " "*(width-2) + theme["v"] + "\n")*inner_text_padding[2]
-
-        for i in range(0, height-2):
-            line = theme["v"]
-            line += " "*inner_text_padding[0]
-            line += inner_text[i]
-            line += " "*(width-2 - inner_text_padding[0] - len(inner_text[i]))
-            line += theme["v"]
-            middle_lines += (line + "\n")
+            first_line = theme["tl"] + theme["h"]*(width-2) + theme["tr"] + "\n"
+            first_line += (theme["v"] + " "*int(header_position) + header_text + " "*((width-2) - len(header_text) - int(header_position)) + theme['v'] + "\n")
+            first_line += theme["l"] + theme["h"]*(width-2) + theme["r"]
         
-        middle_lines += (theme["v"] + " "*(width-2) + theme["v"] + "\n")*inner_text_padding[3]
+        panel += (first_line + "\n")
 
-        # dealing with last line
-        last_line = theme["bl"] + theme["h"]*(width-2) + theme["br"]
+        # starting with the middle lines, since it involves inner_text, will be iterating through a for loop through inner_text_list
+        for i, inner_text_ in enumerate(inner_text_list):
 
-        panel = first_line + "\n" + middle_lines + last_line
+            inner_text = inner_text_[0]
+            inner_text_padding = inner_text_[1]
+            height = self._height if (self._height != 0 and self._height is not None) else len(inner_text)+2
+
+            middle_lines = ""
+            middle_lines += (theme["v"] + " "*(width-2) + theme["v"] + "\n")*inner_text_padding[2]
+
+            for j in range(0, height-2):
+                line = theme["v"]
+                line += " "*inner_text_padding[0]
+                line += inner_text[j]
+                line += " "*(width-2 - inner_text_padding[0] - len(inner_text[j]))
+                line += theme["v"]
+                middle_lines += (line + "\n")
+            
+            middle_lines += (theme["v"] + " "*(width-2) + theme["v"] + "\n")*inner_text_padding[3]
+
+            panel += middle_lines
+            panel += (theme["l"] + theme["h"]*(width-2) + theme["r"] + "\n") if i != len(inner_text_list)-1 else (theme["bl"] + theme["h"]*(width-2) + theme["br"])
+
         self.__panel = panel
 
         """
@@ -451,40 +539,90 @@ class Line:
     ) -> None:
         print(cls.get_line(theme, text, justify_text, text_padding, justify_line, line_padding, width), end = "")
 
-Line.print_line(text = " Someone ", justify_text = "start", text_padding = (5, 5), width = 50, justify_line = "start", line_padding = (10, 5, 1, 1))
+# Line.print_line(text = " Someone ", justify_text = "start", text_padding = (5, 5), width = 50, justify_line = "start", line_padding = (10, 5, 1, 1))
 
+
+panel1 = Panel(
+    title=" Sample Title ",
+    justify_title="start",
+    title_padding=(10, 0),
+    inner_text_padding=(1, 0, 1, 1), # left, right, top, bottom
+    inner_text = "This is a sample line!\nThis is another sample line!\nThis is reallllllllyyyyyyyyyyyyyyyyyyy looooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong textttttt\n\nShe had never observed his face more composed and she grabbed his hand and held it to her heart. It was resistless and dry. The outline of a skull was plain under his skin and the deep burned eye sockets seemed to lead into the dark tunnel where he had disappeared. She leaned closer and closer to his face, looking deep into them, trying to see how she had been cheated or what had cheated her, but she couldn't see anything. She shut her eyes and saw the pin point of light but so far away that she could not hold it steady in her mind. She felt as if she were blocked at the entrance of something. She sat staring with her eyes shut, into his eyes, and felt as if she had finally got to the beginning of something she couldn't begin, and she saw him moving farther and farther away, farther and farther into the darkness until he was the pin point of light.",
+    theme = "rounded", 
+    default_width="",
+    overflow="new_line"
+)
 
 # panel1 = Panel(
-#     title=" Sample Title ",
-#     justify_title="start",
-#     title_padding=(10, 0),
-#     inner_text_padding=(1, 0, 10, 1), # left, right, top, bottom
-#     inner_text = "This is a sample line!\nThis is another sample line!\nThis is reallllllllyyyyyyyyyyyyyyyyyyy looooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong textttttt\n\nShe had never observed his face more composed and she grabbed his hand and held it to her heart. It was resistless and dry. The outline of a skull was plain under his skin and the deep burned eye sockets seemed to lead into the dark tunnel where he had disappeared. She leaned closer and closer to his face, looking deep into them, trying to see how she had been cheated or what had cheated her, but she couldn't see anything. She shut her eyes and saw the pin point of light but so far away that she could not hold it steady in her mind. She felt as if she were blocked at the entrance of something. She sat staring with her eyes shut, into his eyes, and felt as if she had finally got to the beginning of something she couldn't begin, and she saw him moving farther and farther away, farther and farther into the darkness until he was the pin point of light.",
-#     theme = "rounded", 
-#     default_width="",
-#     overflow="new_line"
-# )
-# panel2 = Panel(
-#     inner_text = "This is a sample text!",
-#     theme = "heavy",
-#     default_width = "terminal"
+#     title = " Sample Text ",
+#     inner_text = "This is a sample Text \nb",
+#     default_width = "inner_text",
+#     overflow="hidden"
 # )
 
-# panel3 = Panel(width=25, default_width="inner_text")
+panel1.add_inner_text(
+    inner_text = "this is another inner text"
+)
 
-# panel3.set_title(
-#     title = " TITLE "
-# )
+panel1.add_inner_text(
+    overflow="new_line",
+    inner_text = "This is a sample line!\nThis is another sample line!\nThis is reallllllllyyyyyyyyyyyyyyyyyyy looooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong textttttt\n\nShe had never observed his face more composed and she grabbed his hand and held it to her heart. It was resistless and dry. The outline of a skull was plain under his skin and the deep burned eye sockets seemed to lead into the dark tunnel where he had disappeared. She leaned closer and closer to his face, looking deep into them, trying to see how she had been cheated or what had cheated her, but she couldn't see anything. She shut her eyes and saw the pin point of light but so far away that she could not hold it steady in her mind. She felt as if she were blocked at the entrance of something. She sat staring with her eyes shut, into his eyes, and felt as if she had finally got to the beginning of something she couldn't begin, and she saw him moving farther and farther away, farther and farther into the darkness until he was the pin point of light."
+)
+panel1.add_inner_text(
+    inner_text = "this is another inner text"
+)
+panel1.add_inner_text(
+    inner_text = "this is another inner text"
+)
+panel1.add_inner_text(
+    inner_text = "this is another inner text"
+)
 
-# panel3.set_inner_text(
-#     inner_text = "12345678901234567890124",
-#     default_width = "terminal",
-#     inner_text_padding= (0, 2, 0, 0)
-# )
+panel = Panel(
+    header_text = "⚙️ SETTINGS",
+    justify_header = "center",
+    theme = "rounded",
+    automatic_padding_reduction = True
+)
 
-# print(panel1)
-# # print(panel2)
-# print(panel3)
+panel.add_inner_text(
+    inner_text = "User: qwerty443\nCurrent Universe: play\nPreferred Universe: Long Text\nDictionary Limit: 50\nlet me try increasing the length of the inner text to test this",
+    inner_text_padding = (1, 50, 0, 0),
+    overflow = "new_line"
+)
+
+panel.add_inner_text(
+    inner_text = "[1] Recovery Email\n[2] Change Universe\n[3] Dictionary Limit\n[4] Back to Home",
+    inner_text_padding = (1, 0, 0, 0),
+    overflow = "new_line"
+)
+
+panel2 = Panel(
+    inner_text = "This is a sample text!",
+    theme = "heavy",
+    default_width = "terminal"
+)
+
+panel3 = Panel(default_width="inner_text")
+
+panel3.set_title(
+    title = " TITLE "
+)
+
+panel3.add_inner_text(
+    inner_text = "12345678901234567890124",
+    inner_text_padding= (0, 0, 0, 0)
+)
+
+panel3.set_header(
+    text = "This is the header!",
+    padding = (0, 0, 1, 1),
+    justify = "start"
+)
+
+print(panel)
+print(panel2)
+print(panel3)
 
 # table1 = Table(
 #     title="Popular Tech Gadgets of the Decade",

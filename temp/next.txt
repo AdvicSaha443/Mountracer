@@ -4,29 +4,11 @@ add option to view other user's profile
 add Account/profile state -> where user can view and develop their profile
 add option to reset password, change password, forgot password, take and store their email (for reset password, an email would be sent to their email) also validate the format of the mail given by the user.
 
+if a user breaks their previous high score in that respective text mode, show them a congratulating message
 impement Panel, Table, and Line class and beautify the user interface
 add add_columns_with_default_settings() function in Table Class.
 
-In Panel Class, add an option to add header
 change UI design, similar to the design suggested by chatgpt (Mountracer/state.py file request)
-
-In Panel class, add an option to add multiple inner texts in different boxes attached to one panel
-similar to this: 
-╭──────────────────────────────────────────────╮
-│                 ⚙️ SETTINGS                 │
-├──────────────────────────────────────────────┤
-│  User: qwerty443                             │
-│  Current Universe: Play                      │
-│  Preferred Universe: Long Text               │
-│  Dictionary Limit: 50                        │
-├──────────────────────────────────────────────┤
-│  [1] Recovery Email                          │
-│  [2] Change Universe                         │
-│  [3] Dictionary Limit                        │
-│  [4] Back to Home                            │
-╰──────────────────────────────────────────────╯
-Enter your choice: _
-
 
 errors:
 
@@ -35,7 +17,15 @@ add functionality to check whether unicode characters are supported or not in us
 
 completed:
 
+FIXED - In Panel class, if inner_text_padding(right) is so much that the net table size is greater than the terminal width, the text changes instead of the inner_text_padding(left)
+ADDED - In Panel class, add an option to add multiple inner texts in different boxes attached to one panel
+ADDED - In Panel Class, add an option to add header
 ADDED - add Line class to print lines, basic structure has already been added
 FIXED - line 118 ui_components.py, beautify_rows parameter doesn't work since in some cases column_settings is None, thus loop is never iterated.
 ADDED - create a library/file to handle terminal (user interface) regarding commands such as beautification commands (dash lines, etc)
 ADDED - add page to see information regarded text using text id or dictionary mode
+
+MODIFICATIONS:
+-> Panel class, multiple inner text feature addition:
+- removed default_width option from set_inner_text option, since multiple inner_text will added
+- renamed set_inner_text to add_inner_text
