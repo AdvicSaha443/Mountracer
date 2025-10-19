@@ -1,3 +1,4 @@
+from typingtest.database import get_connection
 from typingtest.user import User
 
 class Session:
@@ -16,9 +17,6 @@ class Session:
 
     def set_current_user(self, user_obj) -> None:
         self.user = user_obj
-        print(f"The current user has been set to: {self.user.username}")
-
-        #adding code here to change universe to user's preferred universe as the user has currently logged in
         self.universe = self.user.preferred_universe
 
     def remove_current_user(self) -> None:
@@ -26,12 +24,22 @@ class Session:
             print(f"The user ({self.user.username}) has been removed!")
             self.user = None
 
-    def get_session_data():
-        pass
-
     def set_current_universe(self, universe: int) -> None:
         uni = ["play", "longtext", "dictionary"]
-        self.universe = uni[universe]
+        self.universe = uni[(universe-1)]
+    
+    def fetch_user(self, username: str = None, user_id: int = None) -> User | None:
+        cursor = get_connection().cursor()
+        cursor.execute("CREATE TABLE IF NOT EXISTS users (user_id INT AUTO_INCREMENT PRIMARY KEY, username VARCHAR(64) UNIQUE, password VARCHAR(64), email VARCHAR(254));")
+        cursor.execute("SELECT * FROM users;") # selecting all the data, and then checking as to add the ability to tell the user whether the username/password is wrong
+        users_data = cursor.fetchall()
+        cursor.close()
+
+        for user in users_data:
+            if user[1] == username or user[0] == user_id:
+                return User(userid = user[0], username=user[1], email = user[3])
+        else:
+            return None
 
 # Will be accessing this session variable everywhere
 session = Session()

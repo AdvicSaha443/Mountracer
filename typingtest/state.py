@@ -1,7 +1,7 @@
 """This file handles all basic commands eg: initializing/navigation, etc etc"""
 
 from typingtest.auth import login, create_new_user
-from typingtest.ui_components import Table, Panel
+from typingtest.ui_components import Table, Panel, Line
 from typingtest.session import session
 from typingtest.user import User
 from typingtest.test import start_test
@@ -39,41 +39,45 @@ def initialize():
         exit (anything else)
     """
 
-    print(f"welcome {session.get_current_user().username}!\nTo get started, call one of the commands mentioned below!: ")
+    print(f"welcome {session.get_current_user().username}!\nTo get started, call one of the commands mentioned below!: ", end="\n\n")
 
     #this loop is going to be the parent loop, all the iteration will be performed here, there will be child loops for typing test or to take some intput
     while True:
         #initially putting the user in home state
         choice = home_state()
 
-        if choice == "0": test_state()
-        elif choice == "1":
+        if choice == "1": test_state()
+        elif choice == "2":
             # will directly add the command to change the universe here, and once the task is done, just continue with the loop so that the user goes back to home page
             change_universe()
-        elif choice == "2": setting_state()
-        elif choice == "3": statistics_state()
-        elif choice == "4": leaderboard_state()
-        elif choice == "5": past_test_state()
-        elif choice == "6": account_state()
+        elif choice == "3": setting_state()
+        elif choice == "4": statistics_state()
+        elif choice == "5": leaderboard_state()
+        elif choice == "6": past_test_state()
+        elif choice == "7": user_dashboard_state()
         else: break
 
 def home_state():
-    print("You're currently in the home state!\n")
-
-    session.set_current_state("HOME")
     user: User = session.get_current_user()
 
-    user_data = user.fetch_user_detail()
-    if user_data is not None: print(user_data)
-
-    print("Current Universe: " + str(session.universe), end= "\n\n")
-    print("Commands:\nTyping Test Menu (0)\nChange Universe (1)\nSettings (2)\nStatistics (3)\nLeaderboard (4)\nHistory (5)\nYour Profile (6)\nLogout/exit (7)")
+    # print("Current Universe: " + str(session.universe), end= "\n\n")
+    # print("Commands:\nTyping Test Menu (0)\nChange Universe (1)\nSettings (2)\nStatistics (3)\nLeaderboard (4)\nHistory (5)\nYour Profile (6)\nLogout/exit (7)")
+    Line.print_line(line_padding = (0, 0, 1, 2), theme = "dashed")
+    print(Panel(
+        header_text = "Welcome to Mountracer!",
+        justify_header = "center",
+        inner_text = "[1] Typing Menu\n[2] Change Universe\n[3] Settings\n[4] Statistics\n[5] Leaderboard\n[6] History\n[7] User Dashboard\n[8] Logout/Exit",
+        inner_text_padding = (1, 16, 0, 0),
+        overflow = "new_line",
+        theme = "rounded",
+        automatic_padding_reduction = True
+    ))
     choice = ""
 
     while True:
-        choice = str(input())
+        choice = str(input("Enter your choice: "))
 
-        if choice not in ["0", "1", "2", "3", "4", "5", "6", "7"]:
+        if choice not in ["1", "2", "3", "4", "5", "6", "7", "8"]:
             print("You must enter 0/1/2/3/4/5/6/7\nEnter your choice: ", end="")
             continue
         else: break
@@ -81,102 +85,136 @@ def home_state():
     return choice
 
 def test_state():
-    print("You're currently in the Typing test state!\n")
-    session.set_current_state("TEST")
-
-    print("Current Universe: " + session.universe, end="\n\n")
-    print("Commands:\nStart Test in Flow State (0)\nStart Test in Practice mode (1)\nChange Universe (2)\nView Text Data (3)\nReturn to Home Page (4 or Enter)\n")
-    choice = ""
-
     while True:
-        choice = str(input())
+        Line.print_line(line_padding=(0, 0, 1, 2), theme = "dashed")
+        print("Current Universe: " + session.universe, end="\n")
+        # print("Commands:\nStart Test in Flow State (0)\nStart Test in Practice mode (1)\nChange Universe (2)\nView Text Data (3)\nReturn to Home Page (4 or Enter)\n")
 
-        if choice not in ["0", "1", "2", "3"]:
-            print("You must enter 0/1/2/3\nEnter your choice: ", end="")
-            continue
+        print(Panel(
+            inner_text = "[1] Start Test (Flow State)\n[2] Start Test (Practice State)\n[3] Change Universe\n[4] View Text Data\n[5] Back to Home Page",
+            inner_text_padding = (1, 16, 0, 0),
+            overflow = "new_line",
+            theme = "rounded",
+            automatic_padding_reduction = True
+        ))
+        choice = ""
+
+        while True:
+            choice = str(input("Enter your choice: "))
+
+            if choice not in ["1", "2", "3", "4", "5"]:
+                print("You must enter 1/2/3/4/5\n", end="")
+                continue
+            else: break
+        
+        if choice == "1": start_test(session.universe, session.get_current_user())
+        elif choice == "2": start_test(session.universe, session.get_current_user(), True)
+        elif choice == "3": change_universe()
+        elif choice == "4": text_information_state()
         else: break
-    
-    if choice == "0": start_test(session.universe, session.get_current_user())
-    elif choice == "1": start_test(session.universe, session.get_current_user(), True)
-    elif choice == "2": change_universe()
-    elif choice == "3": text_information_state()
-    else: return
 
 def setting_state():
-    print("You're currently in the settings state!")
-    session.set_current_state("SETTINGS")
+    while True:
+        Line.print_line(line_padding = (0, 0, 1, 2), theme = "dashed")
+        user_settings: dict = session.get_current_user().get_user_settings()
 
-    settings_table = Table(
-        title = "Settings: ",
-        show_header = False,
-        beautify_rows = True,
-        theme = "rounded"
-    )
+        settings_panel = Panel(
+            header_text="⚙️ SETTINGS",
+            theme="rounded",
+            automatic_padding_reduction=True
+        )
+        user_info = (
+            f"User: {user_settings.get('username', 'N/A')}\n"
+            f"Email: {user_settings.get('email', 'N/A')}\n"
+            f"Current Universe: {session.universe}\n"
+            f"Preferred Universe: {user_settings.get('preferred_universe', 'N/A')}\n"
+            f"Dictionary Limit: {user_settings.get('dictionary_word_limit', 'N/A')}"
+        )
+        settings_panel.add_inner_text(
+            inner_text=user_info,
+            inner_text_padding=(1, 16, 0, 0),
+            overflow="new_line"
+        )
 
-    #will be accessing the settings table in the database, will store user's information and preferences.
-    user_settings: dict = session.get_current_user().get_user_settings()
+        menu_options = (
+            "[1] " + ('Add' if user_settings.get('email') is None else 'Update') + " Recovery Email\n"
+            "[2] Change Preferred Universe\n"
+            "[3] Dictionary Limit\n"
+            "[4] Back to Home"
+        )
+        settings_panel.add_inner_text(
+            inner_text=menu_options,
+            inner_text_padding=(1, 16, 0, 0),
+            overflow="new_line"
+        )
+        print(settings_panel)
 
-    settings_table.add_row("User ID", user_settings.get('user_id'))
-    settings_table.add_row("Username", user_settings.get('username'))
-    settings_table.add_row("Recovery Email", user_settings.get('email'))
-    settings_table.add_row("Current Universe", session.universe)
-    settings_table.add_row("Preferred Universe", user_settings.get('preferred_universe'))
-    settings_table.add_row("Dictionary Word Limit", user_settings.get('dictionary_word_limit'))
+        # print(f"\nUser id: {user_settings.get('user_id')}\nUsername: {user_settings.get('username')}\nRecovery Email: {user_settings.get('email')}\nCurrent Universe: {session.universe}\nPreferred Universe: {user_settings.get('preferred_universe')}\nDictionary Mode Word Limit: {user_settings.get('dictionary_word_limit')}")
+        # print("\n" + ('Add' if user_settings.get('email') is None else 'Update') + " Recovery Email (0)\nChange Preferred Universe (1)\nChange Dictionary mode word limit (2)\nReturn Back to Home Page (3 or Enter)\n")
+        choice = input("Enter your choice: ") 
 
-    print(settings_table)
+        if choice == '1':
+            email_input = input("Enter new recovery email: ")
+            email_validation = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
 
-    # print(f"\nUser id: {user_settings.get('user_id')}\nUsername: {user_settings.get('username')}\nRecovery Email: {user_settings.get('email')}\nCurrent Universe: {session.universe}\nPreferred Universe: {user_settings.get('preferred_universe')}\nDictionary Mode Word Limit: {user_settings.get('dictionary_word_limit')}")
-    print("\n" + ('Add' if user_settings.get('email') is None else 'Update') + " Recovery Email (0)\nChange Preferred Universe (1)\nChange Dictionary mode word limit (2)\nReturn Back to Home Page (3 or Enter)\n")
-    choice = input() 
-
-    if choice == '0':
-        email_input = input("Enter new recovery email: ")
-        email_validation = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
-
-        if len(email_input) >= 254:
-            input("The email length must be less than 254 characters!\nPress Enter to go back")
-            return
-        
-        if re.match(email_validation, email_input) is not None:
-            session.get_current_user().set_user_email(email_input)
-            input(f"Your Recovery Email has been set to: {email_input}!\nPress Enter to go back")
-        else:
-            input("Invalid Email Entered!\nPress Enter to go back")
-
-    elif choice == '1':
-        print("\nHere is the list of universe available:\nPlay (0)\nLong Text (1)\nDictionary (2)\n")
-        choice = input("Enter your choice: ")
-
-        if choice in ['0', '1', '2']:
-            #session.set_current_universe(int(choice))
-            session.get_current_user().set_preferred_universe(int(choice))
-        else:
-            print("You must enter 0/1/2\n")
-
-    elif choice == '2':
-        try:
-            choice = input("Enter the new limit (10 < limit < 150): ")
-
-            if int(choice) <= 150 and int(choice) >= 10:
-                session.get_current_user().set_dictionary_word_limit(int(choice))
-                print(f"Your Dictionary Word Limit has been set to: {choice}")
+            if len(email_input) >= 254:
+                input("The email length must be less than 254 characters!\nPress Enter to go back")
+                return
+            
+            if re.match(email_validation, email_input) is not None:
+                session.get_current_user().set_user_email(email_input)
+                input(f"Your Recovery Email has been set to: {email_input}!\nPress Enter to go back")
             else:
-                print("You must enter a number within 10 and 150")
-        except:
-            print("You must enter a number within 10 and 150")
+                input("Invalid Email Entered!\nPress Enter to go back")
 
-    else: return
+        elif choice == '2': 
+            Line.print_line(line_padding = (0, 0, 1, 2), theme = "dashed")
+            print(Panel(
+                header_text = "Available Universes",
+                inner_text = "[1] Play\n[2] Long Text\n[3] Dictionary",
+                inner_text_padding = (1, 16, 0, 0),
+                theme = "rounded",
+                automatic_padding_reduction = True
+            ))
+            choice = input("Enter your choice: ")
+
+            if choice in ['1', '2', '3']:
+                #session.set_current_universe(int(choice))
+                session.get_current_user().set_preferred_universe(int(choice)-1)
+                print(f"Your preferred Universe has been set to: {['play', 'long text', 'dictionary'][int(choice)-1]}")
+            else:
+                print("You must enter 0/1/2\n")
+        elif choice == '3':
+            try:
+                choice = input("Enter the new limit (10 < limit < 150): ")
+
+                if int(choice) <= 150 and int(choice) >= 10:
+                    session.get_current_user().set_dictionary_word_limit(int(choice))
+                    print(f"Your Dictionary Word Limit has been set to: {choice}")
+                else:
+                    print("You must enter a number within 10 and 150")
+            except:
+                print("You must enter a number within 10 and 150")
+        else: break
 
 def leaderboard_state():
-    print("You're currently in leaderboard state!")
-    print("To view leaderboard, enter a universe:\nPlay (0)\nLong Text (1)\nDictionary (2)\nBack To Home Page (3)\n")
+    # print("To view leaderboard, enter a universe:\nPlay (0)\nLong Text (1)\nDictionary (2)\nBack To Home Page (3)\n")
+
+    Line.print_line(line_padding = (0, 0, 1, 2), theme = "dashed")
+    print(Panel(
+        header_text = "Select Universe to display Leaderboard",
+        inner_text = "[1] Play\n[2] Long Text\n[3] Dictionary\n[4] Exit",
+        inner_text_padding = (1, 25, 0, 0),
+        theme = "rounded",
+        automatic_padding_reduction = True
+    ))
 
     choice = ""
     while True:
         choice = str(input())
 
-        if choice not in ["0", "1", "2", "3"]:
-            print("You must enter 0/1/2/3\nEnter your choice: ", end="")
+        if choice not in ["1", "2", "3", "4"]:
+            print("You must enter 1/2/3/4\nEnter your choice: ", end="")
             continue
         else: break
     
@@ -225,6 +263,7 @@ def leaderboard_state():
 
 def past_test_state(): #alt: history state
     race_info: list = session.get_current_user().fetch_user_race_info()
+    Line.print_line(line_padding = (0, 0, 1, 2), theme = "dashed")
 
     if race_info is None:
         input("You have performed no test yet!\nPress Enter to go Back")
@@ -262,7 +301,6 @@ def past_test_state(): #alt: history state
         input("The CSV file has been downloaded in the project's directory\nPress Enter to go back")
 
 def statistics_state():
-    print("You're currently in statistic state!")
     race_info = session.get_current_user().fetch_user_race_info()
 
     if race_info is None:
@@ -297,14 +335,23 @@ def statistics_state():
     input("\nPress Enter to go back")
 
 def text_information_state():
+    Line.print_line(line_padding = (0, 0, 1, 2), theme = "dashed")
     print("\nhere you can check data related to tests performed for a specific text using its text id!")
-    print("\nSelect Text Universe:\nPlay (0)\nLong Texts (1)\nDictionary (2)")
+
+    print(Panel(
+        header_text = "Available Universes",
+        inner_text = "[1] Play\n[2] Long Text\n[3] Dictionary\n[4] Exit",
+        inner_text_padding = (1, 16, 0, 0),
+        theme = "rounded",
+        automatic_padding_reduction = True
+    ))
     choice = input()
     universe = ""
 
-    if choice == "0": universe = "play"
-    elif choice == "1": universe = "longtext"
-    elif choice == "2": universe = "dictionary"
+    if choice == "1": universe = "play"
+    elif choice == "2": universe = "longtext"
+    elif choice == "3": universe = "dictionary"
+    elif choice == "4": return
     else:
         input("Invalid Number Entered!\nPress Enter to go back!")
         return
@@ -316,7 +363,6 @@ def text_information_state():
         return
 
     text_data = get_text_data(universe, text_id)
-    print(text_data)
 
     if len(text_data) == 1:
         input(text_data.get('err'))
@@ -329,7 +375,7 @@ def text_information_state():
             title = " Text Details ",
             justify_title = "center",
             inner_text = f"{text_detail[1]}\n\nfrom: " + ((text_detail[2][2:] if text_detail[2][0].startswith('\u2014') else text_detail[2])) + f"\nby: {text_detail[3]}",
-            inner_text_padding = (0, 0, 1, 1),
+            inner_text_padding = (1, 1, 1, 1),
             default_width = "inner_text",
             overflow = "new_line",
             theme = "rounded"
@@ -343,7 +389,8 @@ def text_information_state():
         title = "Your Statistics",
         show_header = False,
         beautify_rows = True,
-        responsive = True
+        responsive = True,
+        theme = "rounded"
     )
 
     user_text_table.add_row("Average WPM:", text_data.get("user_average")[0])
@@ -353,7 +400,8 @@ def text_information_state():
 
     user_best_table = Table(
         title = "Your Best",
-        beautify_rows = True
+        beautify_rows = True,
+        theme = "rounded"
     )
     user_best_table.add_column("Text ID")
     user_best_table.add_column("WPM")
@@ -370,7 +418,8 @@ def text_information_state():
         title = "Overall Statistics",
         show_header = False,
         beautify_rows = True,
-        responsive = True
+        responsive = True,
+        theme = "rounded"
     )
 
     general_info_table.add_row("Average WPM: ", text_data.get("text_average")[0])
@@ -380,7 +429,8 @@ def text_information_state():
 
     race_info_table = Table(
         title = "Leaderboard for this text" if universe != "dictionary" else "Leaderboard for this word limit",
-        beautify_rows = True
+        beautify_rows = True,
+        theme = "rounded"
     )
 
     race_info_table.add_column("Rank")
@@ -394,7 +444,7 @@ def text_information_state():
     if text_data.get('user_leaderboard_position') is not None:
         if text_data.get('user_leaderboard_position') > 5:
             if text_data.get('user_leaderboard_position') != 6: race_info_table.add_row(":")
-            race_info_table.add_row(text_data.get('user_leaderboard_position'), user_best[2], user_best[4], user_best[5], user_best[6], time.strftime('%d %b %y %I:%M %p', time.localtime(int(float(user_best[7])))))
+            race_info_table.add_row(text_data.get('user_leaderboard_position'), user_best[2], user_best[4], user_best[5], str(round(user_best[6]*100, 3)) + "%", time.strftime('%d %b %y %I:%M %p', time.localtime(int(float(user_best[7])))))
 
     print(general_info_table)
     print(race_info_table)
@@ -424,28 +474,77 @@ def text_information_state():
     """
     
 
-def account_state():
-    print("You're in the account state!")
+def user_dashboard_state():
+    while True:
+        Line.print_line(line_padding = (0, 0, 1, 2), theme = "dashed")
 
+        print(Panel(
+            header_text = "User Dashboard",
+            inner_text = "[1] View My Profile\n[2] Edit Profile \n[3] View Other Profiles\n[4] Exit",
+            inner_text_padding = (1, 16, 0, 0),
+            theme = "rounded",
+            overflow = "new_line",
+            automatic_padding_reduction = True
+        ))
+        
+        choice = input("Select an Option: ")
 
+        if choice in ['1', '2', '3', '4']:
+            if choice == '1': display_profile(session.get_current_user())
+            elif choice == '2': pass
+            elif choice == '3':
+                print("\nto search a profile, you must enter the user ID or username of the profile to be searched")
+                user_data = input("Enter username/userid: ")
+
+                try:
+                    user_data = int(user_data)
+                    user: User = session.fetch_user(user_id = user_data)
+                except: user: User = session.fetch_user(username = user_data)
+
+                if user is not None: display_profile(user)
+                else: input("\nThe user does not exist!\nPress Enter to go back")
+            elif choice == '4': break
+        else:
+            input("You must enter 1/2/3/4\nPress Enter to go back")
+            break
 
 def help_state():
     pass
 
 
+# assist functions
+
+def display_profile(user: User):
+    user_panel = Panel(
+        header_text = user.username,
+        inner_text = "Some information about the user",
+        inner_text_padding = (1, 15, 0, 0),
+        theme = "rounded",
+        automatic_padding_reduction = True
+    )
+
+    print(user_panel)
+    input("Press enter to go back!")
+
 def change_universe():
-    print("Here is the list of universe available:\nPlay (0)\nLong Text (1)\nDictionary (2)\n")
+    Line.print_line(line_padding = (0, 0, 1, 2), theme = "dashed")
+    print(Panel(
+        header_text = "Available Universes",
+        inner_text = "[1] Play\n[2] Long Text\n[3] Dictionary",
+        inner_text_padding = (1, 16, 0, 0),
+        theme = "rounded",
+        automatic_padding_reduction = True
+    ))
 
     choice = input("Enter your choice: ")
 
-    if choice in ['0', '1', '2']:
+    if choice in ['1', '2', '3']:
         session.set_current_universe(int(choice))
         print(f"The current universe has been changed to: {session.universe}")
     else:
-        print("You must enter 0/1/2\n")
+        print("You must enter 1/2/3\n")
 
 def get_text_data(universe: str, text_id: int) -> dict:
-
     if universe == "dictionary": text_id = f"dict({text_id})"
     current_user = session.get_current_user()
     test_info = current_user.fetch_race_info(universe, text_id)

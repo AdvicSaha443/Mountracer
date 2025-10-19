@@ -1,7 +1,7 @@
 from typingtest.database import get_connection
 
 class User:
-    def __init__(self, userid: int, username: str, password: str, email: str):
+    def __init__(self, userid: int, username: str, password: str = None, email: str = None):
         self.user_id = userid
         self.username = username
         self.password = password
@@ -52,18 +52,13 @@ class User:
         cursor.execute("CREATE TABLE IF NOT EXISTS settings (user_id INT PRIMARY KEY, username VARCHAR(64) UNIQUE, preferred_universe VARCHAR(64), dictionary_word_limit INT);")
         cursor.execute(f"SELECT * FROM settings WHERE user_id = {self.user_id}")
         data = cursor.fetchall()
-        print(data)
 
         if len(data) == 0:
-            print("Settings data of the user doesn't exist")
-
             cursor.execute(f"INSERT INTO settings (user_id, username, preferred_universe, dictionary_word_limit) VALUES({self.user_id}, '{self.username}', 'play', 50);")
 
             self.dictionary_word_limit = 50
             self.preferred_universe = 'play'
         else:
-            print("Settings data of the user already exists")
-
             self.preferred_universe = data[0][2]
             self.dictionary_word_limit = data[0][3]
 
@@ -97,6 +92,7 @@ class User:
 
     def set_preferred_universe(self, new_universe: int):
         uni = ["play", "longtext", "dictionary"]
+        self.preferred_universe = uni[new_universe]
         
         conn = get_connection()
         cursor = conn.cursor()

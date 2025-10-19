@@ -3,6 +3,7 @@
 from typingtest.database import get_connection
 from typingtest.session import session
 from typingtest.user import User
+import re
 
 def login():
     username = str(input("\nEnter your username: "))
@@ -36,6 +37,17 @@ def create_new_user():
 
     if len(username) > 16 or len(password) > 16:
         print("\nThe Username/Password can consist maximum of 16 letters")
+        return 0
+
+    username_validation = re.compile(r"^(?!\d+$)(?!.*[_.]{2})[a-zA-Z0-9](?:[a-zA-Z0-9._]{1,14})[a-zA-Z0-9]$")
+    password_validation = re.compile(r"^(?=.*[a-z])(?=.*\d)(?=.*[@#$%^&+=!_*])[A-Za-z\d@#$%^&+=!_*]{8,16}$")
+
+    if not bool(username_validation.fullmatch(username)):
+        print("\nFollowing constraints must be met for the username:\n- 3–16 characters\n- Letters, numbers, underscores, and dots allowed\n- Cannot start or end with underscore/dot\n- Cannot contain consecutive dots or underscores\n- Cannot be only numbers\n")
+        return 0
+    
+    if not bool(password_validation.fullmatch(password)):
+        print("\nFollowing constraints must be met for the password:\n- 8–16 characters\n- At least one lowercase, one uppercase, one digit, and one special character\n- Allowed special characters: @#$%^&+=!_*\n- No spaces\n")
         return 0
 
     conn = get_connection()

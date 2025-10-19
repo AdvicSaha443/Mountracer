@@ -1,5 +1,5 @@
 from typingtest.database import get_connection
-from typingtest.ui_components import Panel
+from typingtest.ui_components import Panel, Line
 from typingtest.wpm import calculate_stat
 from typingtest.user import User
 import random
@@ -13,8 +13,9 @@ def start_test(universe: str, user: User, practice: bool = False, beautify_text:
 
     while True:
         if choice == "exit": break
-
         text: list = select_text(universe, user.dictionary_word_limit)
+
+        Line.print_line(line_padding = (0, 0, 1, 2), theme = "dashed")
         print("Your time starts now! You may start typing, and once you're done press Enter!\n")
         # print(beautify(text[1]) if beautify_text else text[1], end = "\n\n")
         print(Panel(
@@ -33,7 +34,8 @@ def start_test(universe: str, user: User, practice: bool = False, beautify_text:
         stat = calculate_stat(time.mktime(time.localtime()), (end_time - start_time), text, user_text_input, universe)
 
         # Display information related to current test
-        print("\nYou've Completed the Test!")
+        Line.print_line(line_padding = (0, 0, 1, 2), theme = "dashed")
+        print("You've Completed the Test!")
         print("Here is the Statistics from the test: \n")
 
         # if universe != "dictionary": print(f"You just typed a quote from: {text[2] if text[2][0] != '\u2014' else text[2][3:]}\nAuthor: {text[3]}\n") # backslashes cannot appear inside {} of f strings

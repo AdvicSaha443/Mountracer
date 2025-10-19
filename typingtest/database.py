@@ -35,11 +35,9 @@ def get_connection():
             )
 
         except Exception as e:
-            print("Error: " + e)
+            print("Error: " + str(e))
         
-        if conn.is_connected(): print("a new connection has been established!")
-
-    else: print("connection already exists")
+        if conn.is_connected(): print("database is now connected!")
 
     return conn
 
