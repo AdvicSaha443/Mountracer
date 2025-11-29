@@ -63,14 +63,16 @@ class Table:
         show_header: bool = True,
         theme: str = "light",
         beautify_rows: bool = False,
-        responsive: bool = True
+        responsive: bool = True,
+        table_padding: tuple = (0, 0, 0, 0) #left, right, top, bottom
     ) -> None:
         
-        self._title = str(title)
+        self._title = title
         self._show_header = show_header
         self._theme = theme if theme in Table.THEMES else "light"
         self._beautify_rows = beautify_rows
         self._responsive = responsive
+        self._table_padding = table_padding if len(table_padding) == 4 else (0, 0, 0, 0)
         self._table = None
 
         self._columns = []
@@ -79,6 +81,10 @@ class Table:
     def __str__(self):
         self.__update_table()
         return self._table
+
+    @property
+    def terminal_width():
+        return shutil.get_terminal_size().columns
     
     @property
     def columns(self) -> list:
@@ -306,6 +312,10 @@ class Panel:
     def maximum_line_length() -> int:
         pass
 
+    @property
+    def terminal_width():
+        return shutil.get_terminal_size().columns
+
     def set_title(self, title: str = None, justify: str = "center", padding: tuple = (0, 0)) -> None:
         self._title = title
         self._justify_title = justify if justify in Panel.JUSTIFY else "center"
@@ -484,6 +494,10 @@ class Line:
     def __init__(self):
         pass
 
+    @property
+    def terminal_width():
+        return shutil.get_terminal_size().columns
+
     @classmethod
     def get_line(
         cls,
@@ -624,35 +638,35 @@ print(panel)
 print(panel2)
 print(panel3)
 
-# table1 = Table(
-#     title="Popular Tech Gadgets of the Decade",
-#     theme="rounded",
-#     responsive=True,
-#     show_header = True
-# )
+table1 = Table(
+    title="Popular Tech Gadgets of the Decade",
+    theme="dashed",
+    responsive=True,
+    show_header = True
+)
 
-# table1.add_column(text="Released", justify="center", decorate=False)
-# table1.add_column(text="Product", justify="center", decorate=False)
-# table1.add_column(text="Units Sold", justify="center", decorate=False)
-# table1.add_column(text="Manufacturer", justify="center", decorate=True)
+table1.add_column(text="Released", justify="center", decorate=True)
+table1.add_column(text="Product", justify="start", decorate=True)
+table1.add_column(text="Units Sold", justify="center", decorate=True)
+table1.add_column(text="Manufacturer", justify="center", decorate=True)
 
-# table1.add_row("Nov 10, 2020", "PlayStation 5", "58 million+", "Sony")
-# table1.add_row("Oct 13, 2020", "iPhone 12", "100 million+", "Apple")
-# table1.add_row("Oct 6, 2020", "Google Pixel 5", "7 million+", "Google")
-# table1.add_row("Mar 3, 2017", "Nintendo Switch", "141 million+", "Nintendo")
-# table1.add_row("Oct 26, 2018", "OnePlus 6T", "15 million+", "OnePlus")
-# table1.add_row("Mar 25, 2019", "AirPods 2", "90 million+", "Apple")
-# table1.add_row("Jul 25, 2019", "Samsung Galaxy Note 10", "9 million+", "Samsung")
-# table1.add_row("Oct 13, 2016", "Google Home", "55 million+", "Google")
-# table1.add_row("Sep 18, 2015", "Amazon Echo (2nd Gen)", "40 million+", "Amazon")
-# table1.add_row("Nov 12, 2019", "Disney+ Subscription Launch", "160 million+", "Disney")
-# table1.add_row("Mar 24, 2021", "Xiaomi Mi 11 Ultra", "4 million+", "Xiaomi")
-# table1.add_row("Apr 15, 2021", "Huawei P50 Pro", "3 million+", "Huawei")
-# table1.add_row("Oct 4, 2023", "Meta Quest 3", "1.5 million+", "Meta")
-# table1.add_row("Nov 3, 2017", "Tesla Model 3", "2 million+", "Tesla")
-# table1.add_row("Sep 21, 2018", "Apple Watch Series 4", "33 million+", "Apple")
+table1.add_row("Nov 10, 2020", "PlayStation 5", "58 million+", "Sony")
+table1.add_row("Oct 13, 2020", "iPhone 12", "100 million+", "Apple")
+table1.add_row("Oct 6, 2020", "Google Pixel 5", "7 million+", "Google")
+table1.add_row("Mar 3, 2017", "Nintendo Switch", "141 million+", "Nintendo")
+table1.add_row("Oct 26, 2018", "OnePlus 6T", "15 million+", "OnePlus")
+table1.add_row("Mar 25, 2019", "AirPods 2", "90 million+", "Apple")
+table1.add_row("Jul 25, 2019", "Samsung Galaxy Note 10", "9 million+", "Samsung")
+table1.add_row("Oct 13, 2016", "Google Home", "55 million+", "Google")
+table1.add_row("Sep 18, 2015", "Amazon Echo (2nd Gen)", "40 million+", "Amazon")
+table1.add_row("Nov 12, 2019", "Disney+ Subscription Launch", "160 million+", "Disney")
+table1.add_row("Mar 24, 2021", "Xiaomi Mi 11 Ultra", "4 million+", "Xiaomi")
+table1.add_row("Apr 15, 2021", "Huawei P50 Pro", "3 million+", "Huawei")
+table1.add_row("Oct 4, 2023", "Meta Quest 3", "1.5 million+", "Meta")
+table1.add_row("Nov 3, 2017", "Tesla Model 3", "2 million+", "Tesla")
+table1.add_row("Sep 21, 2018", "Apple Watch Series 4", "33 million+", "Apple")
 
-# print(table1)
+print(table1)
 
 
 

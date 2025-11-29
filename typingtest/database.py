@@ -37,12 +37,9 @@ def get_connection():
         except Exception as e:
             print("Error: " + str(e))
         
-        if conn.is_connected(): print("database is now connected!")
+        # if conn.is_connected(): print("database is now connected!")
 
     return conn
-
-def check_for_table(type: str):
-    pass
 
 # def get_connection():
 #     global conn

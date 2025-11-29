@@ -1,22 +1,32 @@
 add about and help state -> about page: will describe about the application, and how it calculates the speed, etc. ; help page: will guide the user about how to use the application
-add limits for username and password and add password validation regex
 add option to view other user's profile
 add Account/profile state -> where user can view and develop their profile
 add option to reset password, change password, forgot password, take and store their email (for reset password, an email would be sent to their email) also validate the format of the mail given by the user.
 
 if a user breaks their previous high score in that respective text mode, show them a congratulating message
-impement Panel, Table, and Line class and beautify the user interface
-add add_columns_with_default_settings() function in Table Class.
 
-change UI design, similar to the design suggested by chatgpt (Mountracer/state.py file request)
+ADD table and panel padding options in table and panel classes.
+ADD a feature to reject races exceeding 250 wpm or something.
+Display text id after each race.
+after each race, give the option to the user to view previous records related to the race they just performed. -> Something like View top 10 races, View average WPM/ACC, Their Previous attempts (if any)
+add an option to display races in history state in decreasing/increasing of speed/accuracy/time/textID [default -> time]
+add a filter to history state, for textID, universe, etc.
+add the list of improvements suggested by chatgpt for ui_components to make it more efficient.
+
 
 errors:
 
-In test state, return to home page, doesn't work + change is so that Enter or any other input directs the user back to home page
 add functionality to check whether unicode characters are supported or not in user's terminal
 
 completed:
 
+ADDED - impement Panel, Table, and Line class and beautify the user interface
+ADDED - update the table in leaderboard state and history state to newer version using the Table Class.
+ADDED - update navigation ("see 10 races before this") in leaderboard & history state to `[N] next page [B] back page [A] Add Filter [E] Exit` or use numbers instead. display in a straight line, add padding to beautify display
+FIXED - In test state, return to home page, doesn't work + change is so that Enter or any other input directs the user back to home page
+ADDED - change UI design, similar to the design suggested by chatgpt (Mountracer/state.py file request)
+ADDED - add add_columns_with_default_settings() function in Table Class. (add_columns method)
+ADDED - add limits for username and password and add password validation regex
 FIXED - In Panel class, if inner_text_padding(right) is so much that the net table size is greater than the terminal width, the text changes instead of the inner_text_padding(left)
 ADDED - In Panel class, add an option to add multiple inner texts in different boxes attached to one panel
 ADDED - In Panel Class, add an option to add header

@@ -44,7 +44,6 @@ def levenshtein_accuracy(a: str, b: str):
     edit_distance =  dp[len(a)][len(b)]
     accuracy = 1.0 - edit_distance/len(a)
 
-    print("Edit Distance: " + str(edit_distance))
     return (accuracy, edit_distance)
 
 # even if a single mistake exists in a word, the whole word is considered wrong

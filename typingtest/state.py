@@ -5,19 +5,31 @@ from typingtest.ui_components import Table, Panel, Line
 from typingtest.session import session
 from typingtest.user import User
 from typingtest.test import start_test
+import math
 import time
 import csv
 import re
 
 def initialize():
     while True:
-        choice = str(input("To get started login (0) or create a new account (1): "))
+        panel = Panel(
+            header_text = "Welcome to Mountracer!",
+            justify_header = "center",
+            inner_text = "[1] Login\n[2] Create a new Account",
+            inner_text_padding = (1, 16, 0, 0),
+            overflow = "new_line",
+            theme = "rounded",
+            automatic_padding_reduction = True
+        )
+        choice = str(input("\n" + str(panel) + "\nEnter your choice: "))
+        # choice = str(input("To get started login (0) or create a new account (1): "))
 
-        if choice not in ["0", "1"]:
+        if choice not in ["1", "2"]:
             print("You must enter 0/1")
             return
+        else: choice = int(choice) - 1
         
-        if not int(choice):
+        if not choice:
             if not login():
                 continue
             else: break
@@ -39,8 +51,6 @@ def initialize():
         exit (anything else)
     """
 
-    print(f"welcome {session.get_current_user().username}!\nTo get started, call one of the commands mentioned below!: ", end="\n\n")
-
     #this loop is going to be the parent loop, all the iteration will be performed here, there will be child loops for typing test or to take some intput
     while True:
         #initially putting the user in home state
@@ -54,19 +64,19 @@ def initialize():
         elif choice == "4": statistics_state()
         elif choice == "5": leaderboard_state()
         elif choice == "6": past_test_state()
-        elif choice == "7": user_dashboard_state()
+        # elif choice == "7": user_dashboard_state()
         else: break
 
 def home_state():
-    user: User = session.get_current_user()
+    # user: User = session.get_current_user()
 
     # print("Current Universe: " + str(session.universe), end= "\n\n")
     # print("Commands:\nTyping Test Menu (0)\nChange Universe (1)\nSettings (2)\nStatistics (3)\nLeaderboard (4)\nHistory (5)\nYour Profile (6)\nLogout/exit (7)")
     Line.print_line(line_padding = (0, 0, 1, 2), theme = "dashed")
     print(Panel(
-        header_text = "Welcome to Mountracer!",
+        header_text = f"Welcome {session.get_current_user().username}!",
         justify_header = "center",
-        inner_text = "[1] Typing Menu\n[2] Change Universe\n[3] Settings\n[4] Statistics\n[5] Leaderboard\n[6] History\n[7] User Dashboard\n[8] Logout/Exit",
+        inner_text = "[1] Typing Menu\n[2] Change Universe\n[3] Settings\n[4] Statistics\n[5] Leaderboard\n[6] History\n[7] Logout/Exit",
         inner_text_padding = (1, 16, 0, 0),
         overflow = "new_line",
         theme = "rounded",
@@ -77,7 +87,7 @@ def home_state():
     while True:
         choice = str(input("Enter your choice: "))
 
-        if choice not in ["1", "2", "3", "4", "5", "6", "7", "8"]:
+        if choice not in ["1", "2", "3", "4", "5", "6", "7"]:
             print("You must enter 0/1/2/3/4/5/6/7\nEnter your choice: ", end="")
             continue
         else: break
@@ -139,7 +149,7 @@ def setting_state():
         menu_options = (
             "[1] " + ('Add' if user_settings.get('email') is None else 'Update') + " Recovery Email\n"
             "[2] Change Preferred Universe\n"
-            "[3] Dictionary Limit\n"
+            "[3] Change Dictionary Limit\n"
             "[4] Back to Home"
         )
         settings_panel.add_inner_text(
@@ -219,9 +229,9 @@ def leaderboard_state():
         else: break
     
     universe = ""
-    if choice == "0": universe = "play"
-    elif choice == "1": universe = "longtext"
-    elif choice == "2": universe = "dictionary"
+    if choice == "1": universe = "play"
+    elif choice == "2": universe = "longtext"
+    elif choice == "3": universe = "dictionary"
     else: return
 
     leaderboard_data = session.get_current_user().fetch_race_info(universe)
@@ -241,27 +251,36 @@ def leaderboard_state():
     # displaying the table
     # start = len(useful_leaderboard_data)
     start = 0
+    total_pages = math.ceil(len(useful_leaderboard_data)/10.0)
     while True:
         required_leaderboard_info = useful_leaderboard_data[start:start+10]
 
+        table_ = Table(
+            title = f"Table {math.ceil(start/10.0) + 1} of {total_pages}",
+            beautify_rows = True,
+            theme = "rounded"
+        )
+
         # [["Rank", "username", "Text ID", "WPM", "Accuracy", "Time Stamp"]]
-        table = [["Rank", "Username", "Text ID", "WPM", "Accuracy", "Time Stamp"]]
+        table_.add_columns("Rank", "Username", "Text ID", "WPM", "Accuracy", "Time Stamp")
         
         for i, race in enumerate(required_leaderboard_info):
-            table.append([(start + (i+1)), race[2], race[4], race[5], round((race[6]*100), 4), time.strftime('%d %b %y %I:%M %p', time.localtime(int(float(race[7]))))])
+            table_.add_row((start + (i+1)), race[2], race[4], race[5], round((race[6]*100), 4), time.strftime('%d %b %y %I:%M %p', time.localtime(int(float(race[7])))))
 
-        max_column_width = [max([len(str(x[i])) for x in table]) for i in range(0, len(table[0]))]
-        for elem in table: print(" | ".join(str(val) + "".join(" " for _ in range(0, max_column_width[i]-len(str(val)))) for i, val in enumerate(elem)))
+        # max_column_width = [max([len(str(x[i])) for x in table]) for i in range(0, len(table[0]))]
+        # for elem in table: print(" | ".join(str(val) + "".join(" " for _ in range(0, max_column_width[i]-len(str(val)))) for i, val in enumerate(elem)))
 
+        print(table_)
         if (start+10) >= len(useful_leaderboard_data): break
-        choice = input("\nSee 10 races after this (y/n): ")
+        choice = input("\n[N] Next     [Enter] Exit\n")
+        # choice = input("\nSee 10 races after this (y/n): ")
         
-        if choice.lower() in ["yes", "y"]: start+=10
+        if choice.lower() in ["next", "n"]: start+=10
         else: break
 
-    input("\nPress enter to go back")
+    input("[Enter] Exit")
 
-def past_test_state(): #alt: history state
+def past_test_state():
     race_info: list = session.get_current_user().fetch_user_race_info()
     Line.print_line(line_padding = (0, 0, 1, 2), theme = "dashed")
 
@@ -270,27 +289,37 @@ def past_test_state(): #alt: history state
         return
 
     end = len(race_info)
+    total_pages = math.ceil(end/10.0)
+    
     while True:
         if (end-10) < 0: required_race_info = race_info[:end]
         else: required_race_info = race_info[end-10:end]
 
-        table = [["Race No.", "Universe", "Text ID", "WPM", "Accuracy", "Time Stamp"]]
+        # table = [["Race No.", "Universe", "Text ID", "WPM", "Accuracy", "Time Stamp"]]
+        table = Table(
+            title = f"Table {total_pages - math.ceil(end/10.0) + 1} of {total_pages}",
+            beautify_rows = True,
+            theme = "rounded"
+        )
+
+        table.add_columns("Race No.", "Universe", "Text ID", "WPM", "Accuracy", "Time Stamp")
         
         for i, race in enumerate(required_race_info):
-            table.append([(end + ((i+1) - len(required_race_info))), race[3], race[4], race[5], round((race[6]*100), 4), time.strftime('%d %b %y %I:%M %p', time.localtime(int(float(race[7]))))])
+            table.add_row((end + ((i+1) - len(required_race_info))), race[3], race[4], race[5], round((race[6]*100), 4), time.strftime('%d %b %y %I:%M %p', time.localtime(int(float(race[7])))))
 
-        max_column_width = [max([len(str(x[i])) for x in table]) for i in range(0, len(table[0]))]
-        for elem in table: print(" | ".join(str(val) + "".join(" " for _ in range(0, max_column_width[i]-len(str(val)))) for i, val in enumerate(elem)))
+        # max_column_width = [max([len(str(x[i])) for x in table]) for i in range(0, len(table[0]))]
+        # for elem in table: print(" | ".join(str(val) + "".join(" " for _ in range(0, max_column_width[i]-len(str(val)))) for i, val in enumerate(elem)))
+        print(table)
 
         # first need to check whether there are any races left to be displayed
         # will then just change the end value, and everything else be taken care of
         if (end-10) <= 0: break
-        choice = input("\nSee 10 races before this (y/n): ")
+        choice = input("\n[N] Next     [Enter] Exit\n")
         
-        if choice.lower() in ["yes", "y"]: end-=10
+        if choice.lower() in ["next", "n"]: end-=10
         else: break
 
-    if input("\nTo View All the races, download csv file (1)\nPress enter to go back\n") == '1':
+    if input("\n[1] Download History in CSV file format\n[Enter] Exit\n") == '1':
         with open('races.csv', 'w', newline = '') as f:
             csv_writer = csv.writer(f)
             csv_writer.writerow(['Race No.', 'Universe', 'Text ID', 'WPM', 'Accuracy', 'Epoch'])
@@ -302,12 +331,12 @@ def past_test_state(): #alt: history state
 
 def statistics_state():
     race_info = session.get_current_user().fetch_user_race_info()
+    Line.print_line(line_padding = (0, 0, 1, 2), theme = "dashed")
 
     if race_info is None:
-        print("You have performed no test yet!")
+        input("You have performed no test yet!\nPress Enter to go back")
         return
 
-    print("\nTotal race performed: " + str(len(race_info)))
     average_wpm = 0
     average_acc = 0
     play = 0
@@ -325,12 +354,33 @@ def statistics_state():
         average_wpm /= len(race_info)
         average_acc /= len(race_info)
 
-    print("Race performed in play mode: " + str(play))
-    print("Race performed in longtext mode: " + str(longtext))
-    print("Race performed in dictionary mode: " + str(dictionary), end="\n\n")
+    table1 = Table(
+        title = "Race Count",
+        show_header = False,
+        beautify_rows = True,
+        column_separator = ":",
+        theme = "rounded"
+    )
 
-    print("Average wpm: " + str(round(average_wpm, 4)))
-    print("Average acc: " + str(round(average_acc*100.0, 2)))
+    table1.add_row("Total race performed", str(len(race_info)))
+    table1.add_row("", "")
+    table1.add_row("Race performed in play mode", str(play))
+    table1.add_row("Race performed in longtext mode", str(longtext))
+    table1.add_row("Race performed in dictionary mode", str(dictionary))
+
+    table2 = Table(
+        title = "Avg Stats",
+        show_header = False,
+        beautify_rows = True,
+        column_separator = ":",
+        theme = "rounded"
+    )
+
+    table2.add_row("Average wpm", str(round(average_wpm, 4)))
+    table2.add_row("Average acc", str(round(average_acc*100.0, 2)))
+
+    print(table1, end = "\n\n")
+    print(table2, end = "\n")
 
     input("\nPress Enter to go back")
 
@@ -390,13 +440,14 @@ def text_information_state():
         show_header = False,
         beautify_rows = True,
         responsive = True,
-        theme = "rounded"
+        theme = "rounded",
+        column_separator = ":"
     )
 
-    user_text_table.add_row("Average WPM:", text_data.get("user_average")[0])
-    user_text_table.add_row("Average ACC:", text_data.get("user_average")[1])
+    user_text_table.add_row("Average WPM", text_data.get("user_average")[0])
+    user_text_table.add_row("Average ACC", str(round(text_data.get("user_average")[1]*100, 3)) + "%")
 
-    print(user_text_table)
+    print(user_text_table, end="\n\n")
 
     user_best_table = Table(
         title = "Your Best",
@@ -412,18 +463,19 @@ def text_information_state():
     user_best = text_data.get('user_best')
     if user_best is not None:
         user_best_table.add_row(user_best[4], user_best[5], str(round(user_best[6]*100, 3)) + "%", time.strftime('%d %b %y %I:%M %p', time.localtime(int(float(user_best[7])))))
-        print(user_best_table)
+        print(user_best_table, end = "\n\n")
 
     general_info_table = Table(
         title = "Overall Statistics",
         show_header = False,
         beautify_rows = True,
         responsive = True,
-        theme = "rounded"
+        theme = "rounded",
+        column_separator = ":"
     )
 
-    general_info_table.add_row("Average WPM: ", text_data.get("text_average")[0])
-    general_info_table.add_row("Average ACC: ", text_data.get("text_average")[1])
+    general_info_table.add_row("Average WPM", text_data.get("text_average")[0])
+    general_info_table.add_row("Average ACC", str(round(text_data.get("text_average")[1]*100, 3)) + "%")
 
     all_race_info = text_data.get("best_five_races")
 
@@ -440,14 +492,14 @@ def text_information_state():
     race_info_table.add_column("Accuracy")
     race_info_table.add_column("Time Stamp")
 
-    for i, race in enumerate(all_race_info): race_info_table.add_row(i+1, race[2], race[4], race[5], race[6], time.strftime('%d %b %y %I:%M %p', time.localtime(int(float(race[7])))))
+    for i, race in enumerate(all_race_info): race_info_table.add_row(i+1, race[2], race[4], race[5], str(round(race[6]*100, 3)) + "%", time.strftime('%d %b %y %I:%M %p', time.localtime(int(float(race[7])))))
     if text_data.get('user_leaderboard_position') is not None:
         if text_data.get('user_leaderboard_position') > 5:
             if text_data.get('user_leaderboard_position') != 6: race_info_table.add_row(":")
             race_info_table.add_row(text_data.get('user_leaderboard_position'), user_best[2], user_best[4], user_best[5], str(round(user_best[6]*100, 3)) + "%", time.strftime('%d %b %y %I:%M %p', time.localtime(int(float(user_best[7])))))
 
-    print(general_info_table)
-    print(race_info_table)
+    print(general_info_table, end = "\n\n")
+    print(race_info_table, end = "\n\n")
 
     input("Press enter to go back!")
 

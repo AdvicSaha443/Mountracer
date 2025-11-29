@@ -1,5 +1,5 @@
 from typingtest.database import get_connection
-from typingtest.ui_components import Panel, Line
+from typingtest.ui_components import Table, Panel, Line
 from typingtest.wpm import calculate_stat
 from typingtest.user import User
 import random
@@ -12,7 +12,7 @@ def start_test(universe: str, user: User, practice: bool = False, beautify_text:
     choice = ""
 
     while True:
-        if choice == "exit": break
+        if choice == "1": break
         text: list = select_text(universe, user.dictionary_word_limit)
 
         Line.print_line(line_padding = (0, 0, 1, 2), theme = "dashed")
@@ -34,20 +34,48 @@ def start_test(universe: str, user: User, practice: bool = False, beautify_text:
         stat = calculate_stat(time.mktime(time.localtime()), (end_time - start_time), text, user_text_input, universe)
 
         # Display information related to current test
-        Line.print_line(line_padding = (0, 0, 1, 2), theme = "dashed")
-        print("You've Completed the Test!")
-        print("Here is the Statistics from the test: \n")
+        Line.print_line(line_padding = (0, 0, 1, 2), text = " Test Completed! ", theme = "light")
 
         # if universe != "dictionary": print(f"You just typed a quote from: {text[2] if text[2][0] != '\u2014' else text[2][3:]}\nAuthor: {text[3]}\n") # backslashes cannot appear inside {} of f strings
-        if universe != "dictionary": print("You just typed a quote from: " + (text[2][2:] if text[2][0].startswith('\u2014') else text[2]) + f"\nAuthor: {text[3]}\n") # had to factor in the error obtained from web scrapping source
-        print(f"wpm: {stat.get('wpm')}\nacc: {stat.get('accuracy')*100.0}%\nraw wpm: {stat.get('raw_wpm')}\ntotal characters/wrong operations: {len(user_text_input)}/{stat.get('edit_distance')}\n")
+        # if universe != "dictionary": print("You just typed a quote from: " + (text[2][2:] if text[2][0].startswith('\u2014') else text[2]) + f"\nAuthor: {text[3]}\n") # had to factor in the error obtained from web scrapping source
+        # print(f"wpm: {stat.get('wpm')}\nacc: {stat.get('accuracy')*100.0}%\nraw wpm: {stat.get('raw_wpm')}\ntotal characters/wrong operations: {len(user_text_input)}/{stat.get('edit_distance')}\n")
+
+        if universe != "dictionary":
+            table1 = Table(
+                title = "Quote Info",
+                show_header = False,
+                theme = "rounded",
+                beautify_rows = True,
+                column_separator = ":"
+            )
+
+            table1.add_row("Typed From", text[2][2:] if text[2][0].startswith('\u2014') else text[2])
+            table1.add_row("Author", text[3])
+
+            print(str(table1) + "\n")
+
+        table2 = Table(
+            title = "Performance Stats",
+            show_header = False,
+            theme = "rounded",
+            beautify_rows = True
+        )
+
+        table2.add_row("WPM", stat.get('wpm'))
+        table2.add_row("Accuracy", str(round(stat.get("accuracy")*100, 2)) + "%")
+        table2.add_row("", "")
+        table2.add_row("Raw WPM", stat.get('raw_wpm'))
+        table2.add_row("Total Characters", len(user_text_input))
+        table2.add_row("Mistakes", stat.get("edit_distance"))
+
+        print(table2)
 
         if practice:
-            choice1 = input("Do you want to save this result? (y/n): ")
-            if choice1.lower() == "y": save_test_result(stat, user)
+            choice1 = input("\n[1] Save Result\n[Enter] Don't Save\n")
+            if choice1.lower() == "1": save_test_result(stat, user)
         else: save_test_result(stat, user)
 
-        choice = input("Do you want to exit?: (exit): ")
+        choice = input("[1] Exit\n[Enter] Start Another Practice Test\n")
 
 def select_text(universe: str, max_range: int):
     with open(f"./csv_files/text_{universe}.csv", "r", encoding="utf-8") as f:

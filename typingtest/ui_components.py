@@ -1,6 +1,5 @@
 import shutil
 import math
-text = "She had never observed his face more composed and she grabbed his hand and held it to her heart. It was resistless and dry. The outline of a skull was plain under his skin and the deep burned eye sockets seemed to lead into the dark tunnel where he had disappeared. She leaned closer and closer to his face, looking deep into them, trying to see how she had been cheated or what had cheated her, but she couldn't see anything. She shut her eyes and saw the pin point of light but so far away that she could not hold it steady in her mind. She felt as if she were blocked at the entrance of something. She sat staring with her eyes shut, into his eyes, and felt as if she had finally got to the beginning of something she couldn't begin, and she saw him moving farther and farther away, farther and farther into the darkness until he was the pin point of light."
 
 class Table:
     DEFAULT_WIDTH = ["inner_text", "terminal"]
@@ -56,6 +55,10 @@ class Table:
     @classmethod
     def get_theme(cls, name: str) -> str | None:
         return cls.THEMES.get(name)
+    
+    @classmethod
+    def terminal_width(cls) -> int:
+        return shutil.get_terminal_size().columns
 
     def __init__(
         self,
@@ -63,15 +66,17 @@ class Table:
         show_header: bool = True,
         theme: str = "light",
         beautify_rows: bool = False,
-        responsive: bool = True
+        responsive: bool = True,
+        column_separator: str = None # when show_header is false, this feature can be used to replace the typical "line" separator (theme['v']) with a custom separator, for example -> ':'
     ) -> None:
         
-        self._title = str(title)
+        self._title = title
         self._show_header = show_header
         self._theme = theme if theme in Table.THEMES else "light"
         self._beautify_rows = beautify_rows
         self._responsive = responsive
         self._table = None
+        self._column_separator = column_separator
 
         self._columns = []
         self._rows = []
@@ -90,13 +95,16 @@ class Table:
     
     def add_column(self, text: str = None, justify: str = "center", padding: tuple = (0, 0), decorate: bool = False) -> None:
         self._columns.append((
-            str(text),
+            text,
             justify if justify in Table.JUSTIFY else "center",
             padding if len(padding) == 2 else (0, 0),
             decorate
         ))
 
-    def add_row(self, *values):
+    def add_columns(self, *args: str) -> None:
+        for arg in args: self._columns.append((arg, "center", (0, 0), True))
+
+    def add_row(self, *values) -> None:
         self._rows.append([str(x) for x in values])
 
     def __update_table(self) -> None:
@@ -172,7 +180,8 @@ class Table:
             table_ += " "*(int(title_position)) + title + "\n"
         
         #table_ += theme["tl"] + ((theme["h"]*max_column_length[i] + theme["t"]) for i in range(0, len(max_column_length)))[:-1] + theme["tr"]
-        table_ += theme["tl"] + "".join((theme["h"]*max_column_length[i] + theme.get("t")) for i in range(0, len(max_column_length)))[:-1] + theme["tr"] + "\n"
+        if (not header_visible) and (not self._column_separator is None): table_ += theme["tl"] + theme["h"]*(table_width-2) + theme["tr"] + "\n"
+        else: table_ += theme["tl"] + "".join((theme["h"]*max_column_length[i] + theme.get("t")) for i in range(0, len(max_column_length)))[:-1] + theme["tr"] + "\n"
 
         # calculating justified position for each column header:
         justified_header = []
@@ -198,11 +207,17 @@ class Table:
             table_ += theme["v"] + theme["v"].join(justified_header) + theme["v"] + "\n"
             table_ += theme["l"] + "".join((theme["h"]*max_column_length[i] + theme.get("c")) for i in range(0, len(max_column_length)))[:-1] + theme["r"] + "\n"
 
-        for i in range(1 if header_visible else 0, len(table)):
-            row = table[i]
-            table_ += "".join(theme["v"] + elem + "".join(" " for _ in range(len(elem), max_column_length[j])) for j, elem in enumerate(row)) + theme["v"] + "\n"
+        if (not header_visible) and (not self._column_separator is None):
+            for i in range(1 if header_visible else 0, len(table)):
+                row = table[i]
+                table_ += theme["v"] + ("".join(str(self._column_separator) + elem + "".join(" " for _ in range(len(elem), max_column_length[j])) for j, elem in enumerate(row)))[1:] + theme["v"] + "\n"
+        else:
+            for i in range(1 if header_visible else 0, len(table)):
+                row = table[i]
+                table_ += "".join(theme["v"] + elem + "".join(" " for _ in range(len(elem), max_column_length[j])) for j, elem in enumerate(row)) + theme["v"] + "\n"
 
-        table_ += theme["bl"] + "".join((theme["h"]*max_column_length[i] + theme.get("b")) for i in range(0, len(max_column_length)))[:-1] + theme["br"]
+        if (not header_visible) and (not self._column_separator is None): table_ += theme["bl"] + theme["h"]*(table_width-2) + theme["br"]
+        else: table_ += theme["bl"] + "".join((theme["h"]*max_column_length[i] + theme.get("b")) for i in range(0, len(max_column_length)))[:-1] + theme["br"]
 
 
         #table_ += "".join(theme["v"] + elem + "".join(" " for _ in range(len(elem), max_column_length[i])) for i, elem in enumerate(table[0])) + theme["v"]
@@ -265,6 +280,10 @@ class Panel:
     def get_theme(cls, name: str) -> str | None:
         return cls.THEMES.get(name)
 
+    @classmethod
+    def terminal_width(cls) -> int:
+        return shutil.get_terminal_size().columns
+
     def __init__(
             self,
             title: str = None,
@@ -301,10 +320,6 @@ class Panel:
     def __str__(self):
         self.__update_panel()
         return self.__panel
-
-    @property
-    def maximum_line_length() -> int:
-        pass
 
     def set_title(self, title: str = None, justify: str = "center", padding: tuple = (0, 0)) -> None:
         self._title = title
@@ -402,7 +417,7 @@ class Panel:
         else:
             if justify_header == "start": header_position = (1+header_padding[0]) # since justify is start, we're only considering the left padding
             elif justify_header == "end": header_position = ((width-1) - len(header_text) - header_padding[1])
-            else: header_position = (math.floor((width-len(header_text))/2.0)-1)
+            else: header_position = math.floor((width-len(header_text))/2.0)
 
             first_line = theme["tl"] + theme["h"]*(width-2) + theme["tr"] + "\n"
             first_line += (theme["v"] + " "*int(header_position) + header_text + " "*((width-2) - len(header_text) - int(header_position)) + theme['v'] + "\n")
@@ -481,6 +496,10 @@ class Line:
     OVERFLOW = ["hidden", "new_line"]
     JUSTIFY = ["start", "end", "center"]
 
+    @classmethod
+    def terminal_width(cls) -> int:
+        return shutil.get_terminal_size().columns
+
     def __init__(self):
         pass
 
@@ -491,9 +510,10 @@ class Line:
         text: str = None,
         justify_text: str = "center",
         text_padding: tuple = (0, 0), # left, right,
-        justify_line: str = "start", 
+        justify_line: str = "start",
         line_padding: tuple = (0, 0, 0, 0), # left, right, top, bottom
         width: int = None,
+        width_percentage: int = None # user enters the percentage of the terminal size the user wants the line to be
     ) -> str:
         theme = cls.THEMES[theme] if theme in cls.THEMES else cls.THEMES["light"]
         justify_text = justify_text if justify_text in cls.JUSTIFY else "center"
@@ -502,6 +522,7 @@ class Line:
         justify_line = justify_line if justify_line in cls.JUSTIFY else "start"
         terminal_width = shutil.get_terminal_size().columns
 
+        if width_percentage is not None: width = math.floor((width_percentage/100.0)*terminal_width)
         if width is not None and width > terminal_width: width = terminal_width
         if width is None or width == 0: width = terminal_width
         text_position = 0

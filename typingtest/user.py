@@ -49,7 +49,7 @@ class User:
         conn = get_connection()
         cursor = conn.cursor()
 
-        cursor.execute("CREATE TABLE IF NOT EXISTS settings (user_id INT PRIMARY KEY, username VARCHAR(64) UNIQUE, preferred_universe VARCHAR(64), dictionary_word_limit INT);")
+        cursor.execute("CREATE TABLE IF NOT EXISTS settings (user_id INT PRIMARY KEY, username VARCHAR(64) UNIQUE, preferred_universe VARCHAR(64), dictionary_word_limit INT, bio VARCHAR(128));")
         cursor.execute(f"SELECT * FROM settings WHERE user_id = {self.user_id}")
         data = cursor.fetchall()
 

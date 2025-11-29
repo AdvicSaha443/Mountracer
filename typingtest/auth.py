@@ -1,6 +1,7 @@
 """ This files handles the authentication commands"""
 
 from typingtest.database import get_connection
+from typingtest.ui_components import Panel
 from typingtest.session import session
 from typingtest.user import User
 import re
@@ -18,12 +19,12 @@ def login():
     for user in users_data:
         if user[1] == username:
             if user[2] != password:
-                print("Wrong password entered!\nDirecting back to login page\n")
+                print("\nWrong password entered!\nDirecting back to login page\n")
                 break
             else:
                 session.set_current_user(User(userid = user[0], username=username, password=password, email = user[3]))
                 return 1
-    else: print("User does not exist!\nDirecting back to login page\n")
+    else: print("\nUser does not exist!\nDirecting back to login page\n")
     
     return 0
 
